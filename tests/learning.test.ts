@@ -5,10 +5,10 @@ import { createFallbackResult } from "@/lib/agent";
 import {
   CHECKPOINT_LEARNING,
   FILE_LEARNING,
-  TEST_LEARNING,
+  CHECK_LEARNING,
   getCheckpointLearning,
   getFileLearning,
-  getTestLearning,
+  getCheckLearning,
 } from "@/lib/learning";
 import { buildRunSummary } from "@/lib/summary";
 
@@ -24,16 +24,16 @@ describe("learning companion catalog", () => {
     expect(Object.keys(CHECKPOINT_LEARNING)).toHaveLength(6);
   });
 
-  it("covers every changed fixture file and registered test", () => {
+  it("covers every changed fixture file and static check", () => {
     const result = createFallbackResult(DEMO_TASK);
     for (const path of result.filesChanged) {
       expect(getFileLearning(path)).not.toBeNull();
     }
-    for (const test of result.tests) {
-      expect(getTestLearning(test.name)).not.toBeNull();
+    for (const check of result.checks) {
+      expect(getCheckLearning(check.name)).not.toBeNull();
     }
     expect(Object.keys(FILE_LEARNING)).toHaveLength(DEMO_TASK.files.length);
-    expect(Object.keys(TEST_LEARNING)).toHaveLength(result.tests.length);
+    expect(Object.keys(CHECK_LEARNING)).toHaveLength(result.checks.length);
   });
 
   it("keeps learning content informational rather than changing progress", () => {
@@ -41,12 +41,12 @@ describe("learning companion catalog", () => {
     const before = progressFromMilestones(milestones);
     getCheckpointLearning("plan");
     getFileLearning("src/signup.tsx");
-    getTestLearning("Weak password guidance");
+    getCheckLearning("Weak password guidance");
     expect(progressFromMilestones(milestones)).toBe(before);
   });
 
   it("provides actionable guidance for failed checks", () => {
-    const guidance = getTestLearning("Regression coverage");
+    const guidance = getCheckLearning("Regression coverage");
     expect(guidance?.ifItFails).toMatch(/test|message|form/i);
   });
 

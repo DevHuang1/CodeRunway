@@ -2,52 +2,55 @@
 
 ## 1. Context
 
-CodeRunway is a hackathon product for students and solo builders who can describe a small coding task but struggle to turn that task into a verified change. Existing coding-agent experiences can feel opaque: the user sees an answer, but not the path from issue to plan, patch, evidence, and completion.
+CodeRunway helps students and solo builders move from a small coding issue to a reviewable, allowlisted sample patch. Its value is a clear plan, an understandable diff, and honest static content checks—not execution of arbitrary code or proof that a patch compiles.
 
-The product targets the Nebius x NVIDIA Global AI Hackathon Coding and Agentic Engineering track. The project must use Nebius Token Factory or Nebius AI Cloud and at least one NVIDIA open-source model. The MVP uses a safe sample workspace so the public demo is predictable and does not expose arbitrary code execution.
+The live generation path uses NVIDIA Nemotron through Nebius Token Factory. A deterministic local fallback keeps the sample flow available without credentials.
 
 ## 2. Business goals
 
 | ID | Requirement | Success signal |
 | --- | --- | --- |
-| BR-01 | Help a learner move from a coding issue to a verified diff in one guided session. | A first-time user can complete the sample flow without reading implementation documentation. |
-| BR-02 | Make agent work understandable and reviewable. | Every completed checkpoint has visible evidence: plan, changed file, or test result. |
-| BR-03 | Use a goal-gradient runway as a supportive progress aid. | The product shows a finite remaining path and increases visual momentum only after real progress. |
-| BR-04 | Demonstrate the hackathon technology clearly. | The UI and README identify provider mode, model, Nebius Token Factory usage, and fallback mode. |
-| BR-05 | Keep the public demo safe, low-cost, and reproducible. | No arbitrary repository path, secret, or model-generated shell command is accepted. |
-| BR-06 | Preserve user autonomy and dignity. | Users can reject a plan, pause a run, restart, and turn off looping motion. |
+| BR-01 | Help a learner move from a coding issue to a reviewable sample patch. | A first-time user can complete the sample flow without reading implementation documentation. |
+| BR-02 | Make the plan and proposed change understandable. | Every completed checkpoint has visible evidence such as an approved plan, a changed file, or a static criterion result. |
+| BR-03 | Use a goal-gradient runway as a supportive progress aid. | The product shows a finite remaining path and advances only after evidence arrives. |
+| BR-04 | Demonstrate the hackathon technology honestly. | The app identifies Nemotron inference through Nebius Token Factory and distinguishes live model output from local fallback. |
+| BR-05 | Protect the provider key and limit accidental usage. | The key remains server-only; per-client and app-level request caps, concurrency limits, output-token caps, and timeouts are enforced. |
+| BR-06 | Preserve user autonomy and dignity. | Users can reject a plan, pause local runs, stop waiting on a live request, restart, and use reduced motion. |
 
 ## 3. Behavioral design position
 
-The goal-gradient effect is treated as a UX hypothesis: people may find visible proximity to a meaningful goal motivating. CodeRunway should make the remaining work concrete and achievable without manufacturing urgency, hiding failure, or optimizing for time spent.
+The goal-gradient effect is treated as a UX hypothesis: people may find visible proximity to a meaningful goal motivating. CodeRunway should make the remaining work concrete without manufacturing urgency, hiding failure, or optimizing for time spent.
 
-The product must not claim that the interface provides clinical, therapeutic, or scientifically proven psychological benefits. Its measurable promise is narrower: clearer progress, more understandable agent behavior, and a more complete path from issue to verified change.
+The product must not claim clinical, therapeutic, or scientifically proven psychological benefits. Its promise is narrower: a clear sequence, understandable edits, and a careful account of what the sample evaluator did and did not check.
 
 ## 4. Scope
 
 ### In scope
 
-- A polished Next.js workspace for one sample coding issue.
-- Structured planning, patch explanation, and fixed test evidence.
-- Live Nebius Token Factory integration through an NVIDIA Nemotron model.
-- Deterministic fallback when the provider is unavailable.
-- Progress, accessibility, safety, README, and Devpost evidence.
+- A polished Next.js workspace for one fixed sample issue.
+- Structured planning and patch generation through Nebius Token Factory in live mode.
+- Strict validation and a two-file edit allowlist.
+- Deterministic static fixture checks in both live and fallback modes.
+- Server-side request limits, accessible progress, and honest evidence labels.
 
-### Out of scope for the MVP
+### Out of scope
 
 - User accounts, GitHub OAuth, arbitrary repositories, or persistent project storage.
-- Model-generated shell commands.
-- Arbitrary code execution inside the Next.js request process.
-- Claims about mental-health outcomes or guaranteed productivity improvement.
+- Nebius AI Cloud resources, Serverless Jobs, Token Factory Sandboxes, or any other code-execution sandbox.
+- Executing code, compiling TypeScript, or running tests in the app.
+- Model-generated shell commands or arbitrary code execution in the Next.js process.
+- Claims that static content matches prove correctness or runtime behavior.
 
-## 5. Hackathon outcome
+## 5. Hackathon outcome and evidence limits
 
-The submission should demonstrate one complete workflow rather than a generic chatbot: issue → milestones → explainable edits → fixed test run → verified completion. The submission narrative must distinguish the safe MVP fixture from the later Nebius Serverless Job or Token Factory Sandbox execution path.
+The workflow is issue → plan → allowlisted patch → static fixture criteria → review. The live path proves a Token Factory model request only when a deliberately run, authenticated request is observed. It does not prove that generated code compiles or passes tests because no code is executed.
 
-## 6. Ownership and constraints
+This intentionally narrower implementation may not satisfy a track whose current rules require writing, running, and testing code inside Token Factory Sandboxes. The team must verify the current track requirements and choose a track that matches the actual demo rather than implying sandbox execution.
 
-- Product owner: project team.
-- Primary audience: students and solo builders.
-- Primary track: Coding and Agentic Engineering.
-- Operating constraint: the Token Factory key is server-only and must never be committed.
-- Cost constraint: automated tests must not make live provider calls.
+## 6. Operating constraints
+
+- The Token Factory key is server-only, ignored by Git in `.env.local`, never logged, and never included in health responses or client bundles.
+- The Token Factory host is fixed in server code to the official API endpoint.
+- Live requests are limited to 5 per client per minute, 20 per app process per hour, and 2 concurrent requests. Output is capped at 8,192 tokens per request and request time at 120 seconds.
+- The in-memory usage limiter resets on process restart and does not coordinate across app instances. It is not a provider billing quota; provider-side usage controls remain necessary.
+- Unit, integration, and browser tests never call Token Factory.

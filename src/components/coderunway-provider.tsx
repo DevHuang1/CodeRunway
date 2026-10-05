@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { buildInitialMilestones } from "@/lib/progress";
-import type { AgentEvent, AgentPlan, AgentResult, DemoTask, Milestone, TestResult } from "@/lib/types";
+import type { AgentEvent, AgentPlan, AgentResult, CheckResult, DemoTask, Milestone } from "@/lib/types";
 import type { ActivityItem, ProviderStatus, RunState } from "@/components/pages/shared/types";
 import { canVisitStage, type FlowStage } from "@/lib/flow";
 import { mergeEvidenceProgress, mergeVerifiedCheckpointCount, shouldAcceptMilestoneEvidence } from "@/lib/run-progress";
@@ -19,7 +19,7 @@ interface CodeRunwayContextValue {
   progress: number;
   verifiedCheckpointCount: number;
   result: AgentResult | null;
-  tests: TestResult[];
+  checks: CheckResult[];
   activities: ActivityItem[];
   error: string;
   announcement: string;
@@ -31,6 +31,7 @@ interface CodeRunwayContextValue {
   approvePlan: () => boolean;
   startRun: () => Promise<void>;
   pauseRun: () => void;
+  stopRun: () => void;
   rejectPlan: () => void;
   resetSession: () => void;
   setTakeaway: (takeaway: string) => void;
@@ -85,7 +86,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState(0);
   const [verifiedCheckpointCount, setVerifiedCheckpointCount] = useState(0);
   const [result, setResult] = useState<AgentResult | null>(null);
-  const [tests, setTests] = useState<TestResult[]>([]);
+  const [checks, setChecks] = useState<CheckResult[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([initialActivity]);
   const [error, setError] = useState("");
   const [announcement, setAnnouncement] = useState("Workspace ready");
@@ -120,7 +121,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
     setPlan(null);
     setPlanApproved(false);
     setResult(null);
-    setTests([]);
+    setChecks([]);
     setSummaryCopied(false);
     setProgress(0);
     setVerifiedCheckpointCount(0);
@@ -163,12 +164,13 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
 
   const startRun = useCallback(async () => {
     if (!task || !plan || !planApproved) return;
-    const resuming = runState === "paused";
+    const retryingCancelledLive = runState === "cancelled" && plan.mode === "live";
+    const resuming = runState === "paused" || retryingCancelledLive;
     const resumeFromCount = resuming ? verifiedCheckpointCount : 0;
     if (!resuming) {
       setProgress(0);
       setMilestones(plan.milestones);
-      setTests([]);
+      setChecks([]);
       setResult(null);
       setVerifiedCheckpointCount(0);
     }
@@ -176,12 +178,12 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
     abortRef.current = controller;
     setRunState("running");
     setError("");
-    setAnnouncement(resuming ? "The run resumed" : "The run started");
+    setAnnouncement(retryingCancelledLive ? "A new live request started" : resuming ? "The run resumed" : "The run started");
     addActivity({
-      label: resuming ? "Run resumed" : "Run started",
+      label: retryingCancelledLive ? "New live request started" : resuming ? "Run resumed" : "Run started",
       detail: resuming
-        ? `Prior evidence for ${resumeFromCount} checkpoint${resumeFromCount === 1 ? "" : "s"} remains counted.`
-        : "Working inside the safe sample workspace.",
+        ? `Prior evidence for ${resumeFromCount} checkpoint${resumeFromCount === 1 ? "" : "s"} remains counted${retryingCancelledLive ? "; this sends another potentially billable model request" : ""}.`
+        : "The model will return a patch for the fixed sample workspace.",
       tone: "neutral",
       kind: "activity",
     });
@@ -190,7 +192,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/agent/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskId: task.id, planId: plan.id }),
+        body: JSON.stringify({ taskId: task.id, plan }),
         signal: controller.signal,
       });
       if (!response.ok) {
@@ -200,11 +202,12 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
 
       await consumeEventStream(response, (event) => {
         if (event.type === "run_started") {
-          setAnnouncement(`${event.mode === "live" ? "Live" : "Local sample"} run started`);
-          addActivity({ label: event.mode === "live" ? "Live connection ready" : "Local sample ready", detail: event.model, tone: event.mode === "live" ? "good" : "neutral", kind: "activity" });
+          setAnnouncement(`${event.mode === "live" ? "Live Token Factory" : "Local sample"} run started`);
+          addActivity({ label: event.mode === "live" ? "Token Factory request started" : "Local sample ready", detail: event.model, tone: event.mode === "live" ? "good" : "neutral", kind: "activity" });
         }
         if (event.type === "milestone_updated") {
-          if (!shouldAcceptMilestoneEvidence(event.completedCount, resumeFromCount)) return;
+          if (!shouldAcceptMilestoneEvidence(event.completedCount, resumeFromCount)
+            && !(event.state === "failed" && event.completedCount === verifiedCheckpointCount)) return;
           setProgress((current) => mergeEvidenceProgress(current, event.progress));
           setVerifiedCheckpointCount((current) => mergeVerifiedCheckpointCount(current, event.completedCount));
           setMilestones((current) => current.map((milestone) => {
@@ -221,19 +224,23 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
         if (event.type === "file_changed") {
           addActivity({ label: `Changed ${event.path}`, detail: event.summary, tone: "good", kind: "evidence" });
         }
-        if (event.type === "test_result") {
-          setTests((current) => [...current.filter((test) => test.name !== event.result.name), event.result]);
-          addActivity({ label: event.result.status === "passed" ? "Check passed" : "Check needs work", detail: event.result.name, tone: event.result.status === "passed" ? "good" : "warn", kind: "evidence" });
+        if (event.type === "check_result") {
+          setChecks((current) => [...current.filter((check) => check.name !== event.result.name), event.result]);
+          addActivity({ label: event.result.status === "passed" ? "Static check matched" : "Static check needs work", detail: event.result.name, tone: event.result.status === "passed" ? "good" : "warn", kind: "evidence" });
         }
         if (event.type === "run_completed") {
-          const allTestsPassed = event.result.tests.every((test) => test.status === "passed");
+          const allChecksPassed = event.result.verification.status === "passed"
+            && !event.result.verification.testsExecuted
+            && event.result.checks.length > 0
+            && event.result.checks.every((check) => check.status === "passed");
           setResult(event.result);
-          if (allTestsPassed) {
+          setChecks(event.result.checks);
+          if (allChecksPassed) {
             setProgress(100);
             setVerifiedCheckpointCount(6);
             setRunState("complete");
-            setAnnouncement("Verified and ready");
-            addActivity({ label: "Verified and ready", detail: event.result.nextStep, tone: "good", kind: "evidence" });
+            setAnnouncement("Static fixture checks matched");
+            addActivity({ label: "Fixture criteria matched", detail: event.result.nextStep, tone: "good", kind: "evidence" });
           } else {
             setProgress((current) => Math.min(current, 80));
             setVerifiedCheckpointCount((current) => Math.min(current, 5));
@@ -252,9 +259,10 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
       if (controller.signal.aborted) throw new Error("Run paused");
     } catch (runError) {
       if (controller.signal.aborted) {
-        setRunState("paused");
-        setAnnouncement("Run paused");
-        addActivity({ label: "Run paused", detail: "The stream stopped safely and verified checkpoints remain counted.", tone: "neutral", kind: "activity" });
+        const live = plan?.mode === "live";
+        setRunState(live ? "cancelled" : "paused");
+        setAnnouncement(live ? "Live request stopped" : "Run paused");
+        addActivity({ label: live ? "Live request stopped" : "Run paused", detail: live ? "The app stopped waiting where possible. Token Factory may already have processed and billed part of this request; retrying sends another request." : "The local stream stopped safely and verified checkpoints remain counted.", tone: "neutral", kind: "activity" });
       } else {
         setRunState("error");
         setError(friendlyError(runError));
@@ -267,6 +275,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
   }, [addActivity, plan, planApproved, runState, task, verifiedCheckpointCount]);
 
   const pauseRun = useCallback(() => abortRef.current?.abort(), []);
+  const stopRun = useCallback(() => abortRef.current?.abort(), []);
 
   const rejectPlan = useCallback(() => {
     setPlan(null);
@@ -286,7 +295,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
     setPlan(null);
     setPlanApproved(false);
     setResult(null);
-    setTests([]);
+    setChecks([]);
     setRunState("idle");
     setProgress(0);
     setVerifiedCheckpointCount(0);
@@ -319,7 +328,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
     });
   }, [plan, planApproved, result]);
 
-  const runMode = result?.mode ?? provider?.mode ?? "fallback";
+  const runMode = result?.mode ?? plan?.mode ?? provider?.mode ?? "fallback";
 
   return (
     <CodeRunwayContext.Provider value={{
@@ -333,7 +342,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
       progress,
       verifiedCheckpointCount,
       result,
-      tests,
+      checks,
       activities,
       error,
       announcement,
@@ -345,6 +354,7 @@ export function CodeRunwayProvider({ children }: { children: ReactNode }) {
       approvePlan,
       startRun,
       pauseRun,
+      stopRun,
       rejectPlan,
       resetSession,
       setTakeaway,

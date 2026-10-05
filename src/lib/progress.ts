@@ -27,9 +27,9 @@ export const MILESTONE_BLUEPRINT = [
   },
   {
     id: "test",
-    label: "Test",
-    detail: "Run the fixed checks that protect the expected behavior.",
-    evidence: "The registered tests returned their results.",
+    label: "Check",
+    detail: "Compare the sample contents with fixed conditions; no code or test process runs.",
+    evidence: "Static fixture criteria were matched or flagged.",
   },
   {
     id: "verify",

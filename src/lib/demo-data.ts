@@ -21,19 +21,26 @@ export function SignupForm() {
 
 const signupAfter = `import { useState } from "react";
 
-function passwordStrength(password: string) {
-  if (password.length >= 12 && /[A-Z]/.test(password) && /\\d/.test(password)) {
-    return "strong";
-  }
-  if (password.length >= 8) return "medium";
-  return "weak";
+export function passwordStrength(password: string) {
+  if (password.length >= 12 && /[A-Z]/.test(password) && /\\d/.test(password)) return "strong" as const;
+  if (password.length >= 8) return "medium" as const;
+  return "weak" as const;
+}
+
+export function PasswordFeedback({ password }: { password: string }) {
+  const strength = passwordStrength(password);
+  const hasError = password.length > 0 && strength === "weak";
+  return (
+    <>
+      <p id="password-help" role="status">Strength: {strength}</p>
+      {hasError ? <p id="password-error">Use at least 8 characters.</p> : null}
+    </>
+  );
 }
 
 export function SignupForm() {
   const [password, setPassword] = useState("");
-  const strength = passwordStrength(password);
-  const hasError = password.length > 0 && strength === "weak";
-
+  const hasError = password.length > 0 && passwordStrength(password) === "weak";
   return (
     <form aria-label="Create an account">
       <label htmlFor="password">Password</label>
@@ -41,36 +48,43 @@ export function SignupForm() {
         id="password"
         type="password"
         value={password}
-        aria-describedby="password-help password-error"
+        aria-describedby={hasError ? "password-help password-error" : "password-help"}
         aria-invalid={hasError}
         onChange={(event) => setPassword(event.target.value)}
       />
-      <p id="password-help" role="status">Strength: {strength}</p>
-      {hasError && <p id="password-error">Use at least 8 characters.</p>}
-      <button type="submit" disabled={hasError || password.length === 0}>
-        Create account
-      </button>
+      <PasswordFeedback password={password} />
+      <button type="submit" disabled={hasError || password.length === 0}>Create account</button>
     </form>
   );
 }`;
 
-const testBefore = `describe("SignupForm", () => {
-  it("renders a password field", () => {
-    render(<SignupForm />);
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+const testBefore = `import { describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { SignupForm } from "./signup";
+
+describe("signup form", () => {
+  it("renders a labeled password field", () => {
+    expect(renderToStaticMarkup(<SignupForm />)).toContain('id="password"');
   });
 });`;
 
-const testAfter = `describe("SignupForm", () => {
-  it("renders a password field", () => {
-    render(<SignupForm />);
-    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+const testAfter = `import { describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { PasswordFeedback, SignupForm, passwordStrength } from "./signup";
+
+describe("signup password guidance", () => {
+  it("associates accessible feedback with the password field", () => {
+    expect(renderToStaticMarkup(<SignupForm />)).toContain('aria-describedby="password-help"');
   });
 
-  it("explains when a password is too short", async () => {
-    render(<SignupForm />);
-    await userEvent.type(screen.getByLabelText("Password"), "short");
-    expect(screen.getByText("Use at least 8 characters.")).toBeInTheDocument();
+  it("explains why short passwords are rejected", () => {
+    expect(renderToStaticMarkup(<PasswordFeedback password="short" />)).toContain("Use at least 8 characters.");
+  });
+
+  it("classifies common password strengths", () => {
+    expect(passwordStrength("short")).toBe("weak");
+    expect(passwordStrength("password8")).toBe("medium");
+    expect(passwordStrength("Password12345")).toBe("strong");
   });
 });`;
 

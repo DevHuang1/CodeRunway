@@ -1,14 +1,14 @@
 # CodeRunway
 
-CodeRunway is a goal-gradient coding agent for students and solo builders. It turns a small coding issue into a structured plan, an explainable patch, and verified tests inside a safe sample workspace.
+CodeRunway is a calm, goal-gradient workspace for moving one small coding issue to a reviewable patch. It guides students and solo builders through a plan, a bounded sample change, and honest static fixture checks.
 
-The project is designed for the **Coding and Agentic Engineering** track of the [Nebius x NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com/). The live provider path uses NVIDIA Nemotron through the OpenAI-compatible Nebius Token Factory API. The fallback path is deterministic and works without credentials, so the product demo remains reproducible.
+The live model path uses NVIDIA Nemotron 3.5 Lightning through the Nebius Token Factory API. The deterministic fallback works without credentials. Both paths are limited to the fixed sample task. **The app does not run or compile code, execute tests, or create Nebius AI Cloud jobs.**
 
 ## Requirements
 
 - Node.js 22 or newer.
-- pnpm 9 or newer.
-- Optional: a Nebius Token Factory API key with access to the configured Nemotron model.
+- pnpm 11.19.0 (pinned through Corepack).
+- Optional live use: a Nebius Token Factory API key with access to `nvidia/Nemotron-3_5-Lightning`.
 
 ## Run locally
 
@@ -18,11 +18,29 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Put the API key in `.env.local` as `NEBIUS_API_KEY=...`; do not paste it into chat, source code, or a `NEXT_PUBLIC_*` variable. `.env.local` is Git-ignored. If you already have that file, do not overwrite it—just add any missing settings. Next.js reads it server-side as runtime environment configuration; the browser receives only safe provider status, never the key.
 
-The product is organized as a five-page guided workflow. `/` redirects to `/issue`; the flow then moves through `/plan`, `/run`, `/review`, and `/verify`. State is intentionally held in memory for the demo, so refreshing a workflow page returns to `/issue` with a truthful reset notice rather than implying that work was preserved.
+Open [http://localhost:3000](http://localhost:3000). The five-page flow is `/issue` → `/plan` → `/run` → `/review` → `/verify`; `/` is the editorial landing page. Session state is held in memory and resets on refresh.
 
-With an empty `NEBIUS_API_KEY`, `AGENT_MODE=auto` uses the safe deterministic fallback. To use live inference, set `NEBIUS_API_KEY` in `.env.local`, confirm the model ID in the Token Factory model catalog, and restart the development server. Never expose the key through a `NEXT_PUBLIC_*` variable or commit `.env.local`.
+With `AGENT_MODE=auto`, the app uses Token Factory when `NEBIUS_API_KEY` is present and otherwise runs the deterministic fallback. Use `AGENT_MODE=fallback` to prevent any model call. `AGENT_MODE=live` requires the server-only key. The Token Factory endpoint and model (`nvidia/Nemotron-3_5-Lightning`) are fixed in server code; no custom URL or higher-priced model override is accepted.
+
+## Cost and key-protection limits
+
+The app enforces these server-side limits before live API requests:
+
+- 5 model requests per minute per client.
+- 20 model requests per hour across this app process.
+- At most 2 concurrent model requests.
+- A maximum of 8,192 output tokens per model call and a 120-second request timeout.
+- No automatic model retries or repair loop.
+
+The in-memory rate limiter is a safety guardrail, not a billing quota: it resets when the server restarts and is separate for each app instance. Set the smallest available spending/usage limits in the Nebius account and monitor Token Factory usage. Stopping a request cannot guarantee that provider work already processed will not be billed; retries make new requests.
+
+## Evidence and safety boundaries
+
+The model can return only structured edits and explanations. The server validates output and accepts edits only to the fixed sample's two allowlisted files. No model-provided shell command is accepted. The evaluator checks for expected text and markup in those file contents; these are **static fixture criteria**, not executed tests, typechecks, or proof that the code compiles or works at runtime. The Verify page and copied summary say this explicitly in both live and fallback modes.
+
+The app does not accept arbitrary repositories, execute user code in the Next.js process, run a sandbox, or connect to GitHub. Do not describe the current build as performing sandboxed coding or test execution in a Devpost submission. This narrower scope may be a weaker fit for a track requiring agents to write, run, and test code in a Token Factory Sandbox; check the current [hackathon rules](https://nebiusglobalaihackathon.devpost.com/rules) before choosing a track.
 
 ## Verify the project
 
@@ -31,38 +49,14 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
-```
-
-The browser workflow can be run with:
-
-```bash
-pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-The live provider is not called by the automated test suite. Use a separately configured manual smoke test before a submission demo.
+Automated tests use mocks and deterministic fallback behavior; they never spend Token Factory credits. Any live smoke check is opt-in and should be run deliberately after reviewing current model access and account usage controls.
 
-## Product boundaries
+## Product design
 
-The MVP uses an allowlisted, in-memory sample workspace. It does not accept arbitrary repository paths, execute model-supplied shell commands, connect to GitHub, or run arbitrary user code in the Next.js process. The fallback evaluator uses fixed tests and pre-authored fixture evidence.
-
-For a submission-ready deployment, move fixture patching and test execution into a Nebius Serverless Job or Token Factory Sandbox, capture the execution logs, and preserve the same typed event contract in the UI.
-
-## Goal-gradient design
-
-Progress is represented by six evidence-backed checkpoints: understand, plan, generate, inspect, test, and verify. A restrained sand/coral/teal gradient becomes more complete only as checkpoints are actually verified. It is a motivational visual aid, not a claim of therapeutic effect. Looping animation is disabled when the user prefers reduced motion.
-
-Learning notes are deterministic, reviewable sample content rather than model-generated advice. They support understanding of the code change without claiming clinical, therapeutic, or scientifically proven psychological benefits.
-
-## Demo features
-
-- Work through one focused page at a time: issue, plan, run, review, and verify.
-- Open concise learning notes for each checkpoint, changed file, and test without changing progress.
-- Pause and resume the sample run while keeping previously verified checkpoints counted.
-- Select any checkpoint to read the evidence that makes it meaningful.
-- Inspect each changed allowlisted file through the diff tabs.
-- Copy or download the verified patch.
-- Copy a concise run summary with the provider mode, changed files, checks, and next step.
+Progress is represented by six evidence-backed checkpoints: understand, plan, generate, inspect, check, and verify. The goal-gradient advances only when a real plan, patch, or static-check result arrives. Learning notes are fixed and reviewable; opening them never changes progress. The product makes no clinical or scientifically proven psychological-benefit claims.
 
 ## Project documents
 
@@ -72,4 +66,4 @@ Learning notes are deterministic, reviewable sample content rather than model-ge
 
 ## Devpost readiness
 
-Before submitting, confirm that the public repository has an open-source license, setup instructions, the live Nebius/NVIDIA integration evidence, a demo URL or test build, and a public demonstration video. Explain any work that was created or significantly updated during the submission period in the Devpost entry.
+Before submitting, confirm the chosen track matches the actual capabilities, and include an open-source license, setup instructions, live Nebius/NVIDIA integration evidence, a demo URL or test build, and a public demonstration video. Do not present static fixture matches as executed tests or sandbox evidence.

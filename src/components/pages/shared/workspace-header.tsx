@@ -8,7 +8,8 @@ function statusLabel(state: RunState) {
     ready: "Plan ready to review",
     running: "Working through the plan",
     paused: "Paused here",
-    complete: "Verified and ready",
+    cancelled: "Request stopped",
+    complete: "Fixture criteria matched",
     error: "Needs a closer look",
   }[state];
 }

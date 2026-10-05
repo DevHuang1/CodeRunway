@@ -2,60 +2,61 @@
 
 ## 1. Architecture
 
-CodeRunway is a Next.js App Router application with a server-side backend-for-frontend layer:
+CodeRunway is a Next.js App Router application with a server-only Token Factory integration and an in-memory sample evaluator:
 
 ```text
 Browser workspace
     │
     ├── Next.js App Router pages and shared client session provider
     └── Route Handlers
-          ├── deterministic fixture agent
-          └── Nebius Token Factory OpenAI-compatible client
-                    │
-                    └── NVIDIA Nemotron model
+          ├── deterministic sample plan and patch
+          ├── Nebius Token Factory OpenAI-compatible client (Nemotron)
+          ├── schema validation and two-file allowlist
+          ├── in-memory request/concurrency limiter
+          └── static fixture-criteria evaluator (no code execution)
 ```
 
-The first MVP stores the sample run in memory and only operates on an allowlisted fixture. A submission-ready version moves patching and test execution into a Nebius Serverless Job or Token Factory Sandbox while preserving the browser event contract.
+The user session and request limits are held in process memory. The app has no sandbox, no job runner, and no code/test execution path.
 
 ## 2. Functional requirements
 
 | ID | Requirement |
 | --- | --- |
-| SRS-01 | `GET /api/demo/tasks` returns the sample issue and fixture metadata. |
+| SRS-01 | `GET /api/demo/tasks` returns the fixed sample issue and fixture metadata. |
 | SRS-02 | `POST /api/agent/plan` accepts a known task ID and returns an ordered typed plan. |
-| SRS-03 | `POST /api/agent/run` accepts a known task and approved plan ID and streams typed run events. |
-| SRS-04 | The live provider uses a server-only OpenAI-compatible Nebius client. |
-| SRS-05 | `AGENT_MODE=auto` selects live mode only when a key exists; otherwise it selects deterministic fallback. |
-| SRS-06 | `AGENT_MODE=live` reports a safe actionable error for missing credentials, timeout, rejected model, or malformed output. |
-| SRS-07 | Model output is schema-validated before it can affect the fixture. |
-| SRS-08 | File edits are restricted to known sample paths; model-generated shell commands are rejected and never run. |
-| SRS-09 | Tests are fixed, pre-registered evaluators and completion requires all required tests to pass. |
+| SRS-03 | `POST /api/agent/run` accepts a known task and validated approved plan, then streams typed run events. |
+| SRS-04 | Live planning and patch generation use a server-only OpenAI-compatible Nebius Token Factory client and a configured NVIDIA Nemotron model. |
+| SRS-05 | `AGENT_MODE=auto` selects live mode when `NEBIUS_API_KEY` is configured; otherwise it selects deterministic fallback. |
+| SRS-06 | `AGENT_MODE=live` reports safe actionable errors for a missing key, timeout, unavailable model, provider limit, or malformed output. |
+| SRS-07 | Model output is schema-validated before it can affect the sample result. |
+| SRS-08 | File edits are restricted to the two known sample paths; shell commands and dependencies are never accepted or run. |
+| SRS-09 | Completion is based only on static fixture criteria. All UI and summary labels state that code and tests were not executed. |
 | SRS-10 | The UI derives progress from received evidence and never advances from animation alone. |
-| SRS-11 | `GET /api/health` exposes only safe provider status and configured model metadata. |
-| SRS-12 | The README documents local setup, provider configuration, safety boundaries, and Devpost evidence. |
-| SRS-13 | Checkpoint selection reveals the associated evidence criterion without changing verified progress. |
-| SRS-14 | A completed run exposes per-file diff navigation and client-side patch download/copy actions for allowlisted files. |
-| SRS-15 | A completed run exposes a concise copyable summary containing mode, changed files, check results, and next step. |
-| SRS-16 | The App Router exposes `/issue`, `/plan`, `/run`, `/review`, and `/verify`, while `/` redirects to `/issue`. |
-| SRS-17 | A shared in-memory client provider owns task, plan, approval, stream evidence, result, and reset state without persisting secrets or claiming refresh continuity. |
-| SRS-18 | A guided stepper and route guard allow revisiting evidence-backed pages and redirect direct access to locked pages to `/issue?reset=1`. |
-| SRS-19 | Static, validated learning metadata provides checkpoint, file, and test explanations without a new model or API dependency. |
-| SRS-20 | Pausing a run preserves verified checkpoint count and resumes without decreasing evidence-backed progress; cancelled SSE streams close safely. |
-| SRS-21 | The copied run summary may include an optional client-only learner takeaway without exposing secrets or changing evaluator results. |
+| SRS-11 | `GET /api/health` reports safe provider status and fixed usage limits without exposing secrets. |
+| SRS-12 | The README documents local setup, server-only provider configuration, request caps, safety boundaries, and evidence limitations. |
+| SRS-13 | Checkpoint selection reveals its evidence criterion without changing verified progress. |
+| SRS-14 | A completed run exposes per-file diff navigation and client-side patch download/copy for allowlisted files. |
+| SRS-15 | A completed run exposes a concise copyable summary with mode, changed files, static criteria, and next step. |
+| SRS-16 | The editorial landing page is at `/`; the workflow pages are `/issue`, `/plan`, `/run`, `/review`, and `/verify`. |
+| SRS-17 | A shared in-memory client provider owns task, plan, approval, streamed evidence, result, and reset state without persisting secrets. |
+| SRS-18 | Guided navigation allows revisiting evidence-backed pages and redirects direct access to locked pages to `/issue?reset=1`. |
+| SRS-19 | Static, validated learning metadata explains checkpoints, files, and fixture criteria without additional provider calls. |
+| SRS-20 | Pausing a local fallback run preserves verified checkpoints; stopping a live request preserves received evidence and warns that already-processed usage may still be billed. |
+| SRS-21 | The copied run summary may include an optional client-only learner takeaway without changing evaluator results. |
+| SRS-22 | Live requests are capped at 5 per client per minute, 20 per app process per hour, and 2 concurrent calls. The process-local limiter is documented as non-durable and non-distributed. |
+| SRS-23 | Each provider call is limited to at most 8,192 output tokens and 120 seconds, with automatic SDK retries disabled. |
+| SRS-24 | Agent POST bodies are streamed and rejected above 16 KiB before provider calls are made. |
 
 ## 3. Runtime configuration
 
 ```text
 AGENT_MODE=auto
 NEBIUS_API_KEY=
-NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1
-NEBIUS_MODEL=nvidia/Nemotron-3_5-Lightning
-MAX_AGENT_STEPS=6
-MAX_OUTPUT_TOKENS=1200
-REQUEST_TIMEOUT_MS=30000
+MAX_OUTPUT_TOKENS=8192
+REQUEST_TIMEOUT_MS=120000
 ```
 
-The model ID is configurable because access and catalog availability can change. The default is the current Nemotron 3.5 Lightning identifier documented by Nebius; a live smoke test must verify the account can reach it.
+`NEBIUS_API_KEY` is read only in server code. `.env.local` is ignored by Git. The Token Factory base URL and cost-optimized Nemotron model ID are fixed in server code rather than being configurable. The output token and timeout environment values may reduce the defaults but cannot exceed the hard limits.
 
 ## 4. Typed interfaces
 
@@ -67,33 +68,33 @@ Request:  { taskId: string }
 Response: { id, taskId, goal, mode, model, milestones[] }
 ```
 
-Each milestone contains `id`, `label`, `detail`, `evidence`, `state`, and `progress`.
-
 ### Run stream
 
 ```text
 POST /api/agent/run
-Request: { taskId: string, planId: string }
+Request: { taskId: string, plan: AgentPlan }
 Content-Type: text/event-stream
 ```
 
 Events are JSON objects with a `type` field:
 
 - `run_started`: mode, model, task ID.
-- `milestone_updated`: milestone ID, state, completed count, progress.
-- `file_changed`: allowlisted path, summary, diff.
-- `test_result`: fixed test name, status, and safe details.
-- `run_completed`: final explanation, changed files, tests, next step.
+- `milestone_updated`: milestone ID, state, completed count, progress, and evidence.
+- `file_changed`: allowlisted path, summary, and diff.
+- `check_result`: fixed static criterion name, status, and details; never an executed-test result.
+- `run_completed`: explanation, changed files, static fixture criteria, `testsExecuted: false`, and next step.
 - `run_error`: safe error code and user-facing message.
+
+Live plan and run requests consume one rate-limit permit each. A retry is a new provider request and may be billed.
 
 ## 5. Non-functional requirements
 
-- **Security:** never expose or log `NEBIUS_API_KEY`; reject unknown paths and commands; bound request size, steps, output tokens, and timeout.
-- **Reliability:** fallback flow works without a network or provider key.
+- **Security:** never expose or log `NEBIUS_API_KEY`; use only the official fixed Token Factory host; reject unknown paths; bound request size, output tokens, and time; limit request rate and concurrency.
+- **Reliability:** deterministic fallback works without a network or key; provider failures never masquerade as passing evidence.
 - **Accessibility:** semantic HTML, keyboard operation, visible focus, progress semantics, live announcements, and reduced-motion support.
-- **Performance:** the fallback reaches a visible plan quickly; live calls use a bounded timeout and do not block the browser with a full-page loading state.
-- **Cost:** unit, integration, and CI tests never call Nebius; live inference is opt-in.
-- **Deployment:** production build uses Next.js standalone output and includes a Dockerfile for Nebius AI Cloud.
+- **Performance:** fallback completes quickly; live requests time out after at most 120 seconds and can be stopped from the browser.
+- **Cost:** tests never call Nebius; no automatic model retry or repair loop; the process-local limiter is not represented as a provider-side spend quota.
+- **Deployment:** use a standard Next.js runtime. No cloud job, runner image, CLI identity, or sandbox setup is required.
 
 ## 6. Traceability matrix
 
@@ -106,9 +107,9 @@ Events are JSON objects with a `type` field:
 | BR-02 | UR-14, UR-15 | SRS-19, SRS-20, SRS-21 | Learning catalog, pause/resume, and browser workflow tests |
 | BR-03 | UR-02, UR-09, UR-10 | SRS-10 | Progress and accessibility tests |
 | BR-04 | UR-07 | SRS-04, SRS-05, SRS-11 | Provider selection and health tests |
-| BR-05 | UR-08 | SRS-06, SRS-08, SRS-09 | Safety validation tests |
-| BR-06 | UR-08, UR-09, UR-10 | SRS-06, SRS-10 | Browser and reduced-motion checks |
+| BR-05 | UR-08 | SRS-06, SRS-07, SRS-08, SRS-22, SRS-23, SRS-24 | Safety, limiter, and mocked live-provider tests |
+| BR-06 | UR-08, UR-09, UR-10 | SRS-06, SRS-10, SRS-20 | Browser and reduced-motion checks |
 
 ## 7. Acceptance criteria
 
-The MVP is accepted when a clean install can complete the fallback workflow without credentials, a live configuration reaches Nebius Token Factory, malformed or unsafe provider output is rejected, progress never advances without evidence, all automated checks pass, and the README explains the distinction between the safe MVP fixture and the sandboxed submission path.
+The app is accepted when a clean install completes the fallback flow without credentials; with a configured key, live planning and patch generation call Token Factory; requests respect the fixed host, token/time caps, and rate limiter; malformed or unsafe output is rejected; the UI clearly reports static-only evidence; progress never advances without evidence; and automated checks pass without spending provider credits.

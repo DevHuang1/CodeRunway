@@ -107,7 +107,9 @@ test("completes the safe fallback workflow", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Download" })).toBeVisible();
   await page.getByRole("button", { name: "Continue to verify" }).click();
   await expect(page).toHaveURL(/\/verify$/);
-  await expect(page.getByRole("heading", { name: "3/3 checks passed" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "3/3 fixture checks matched" })).toBeVisible();
+  await expect(page.getByText("Static fixture criteria (not executed tests)")).toBeVisible();
+  await expect(page.getByText("no code execution", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Copy run summary" })).toBeVisible();
   await expect(page.getByText("src/signup.tsx", { exact: true })).toBeVisible();
   const testLearning = page.locator("summary").filter({ hasText: "Understand this check" }).first();
@@ -121,6 +123,116 @@ test("completes the safe fallback workflow", async ({ page }) => {
   await page.getByRole("button", { name: "Start another run" }).click();
   await expect(page).toHaveURL(/\/issue(?:\?reset=1)?$/);
   await expect(page.getByRole("heading", { name: "Name the small change you want to make." })).toBeVisible();
+});
+
+test("stops and retries a Token Factory request while keeping static-only evidence clear", async ({ page }) => {
+  const milestones = ["understand", "plan", "generate", "inspect", "test", "verify"].map((id, index) => ({
+    id,
+    label: id,
+    detail: `Review ${id}`,
+    evidence: `${id} evidence`,
+    state: index === 0 ? "active" : "pending",
+    progress: index * 20,
+  }));
+  const plan = {
+    id: "plan-signup-validation-live",
+    taskId: "signup-validation",
+    goal: "Add accessible password-strength validation",
+    mode: "live",
+    model: "nvidia/Nemotron-3_5-Lightning",
+    milestones,
+    createdAt: new Date().toISOString(),
+  };
+
+  await page.route("**/api/health", (route) => route.fulfill({ json: {
+    status: "ok",
+    provider: {
+      mode: "live", preference: "live", configured: true, modelCredentialsConfigured: true,
+      model: "nvidia/Nemotron-3_5-Lightning", baseUrl: "https://api.tokenfactory.nebius.com/v1", liveReady: true,
+      limits: { maxOutputTokens: 8192, timeoutMs: 120000, perClientPerMinute: 5, perApplicationPerHour: 20, concurrentRequests: 2 },
+    },
+  } }));
+  await page.route("**/api/agent/plan", (route) => route.fulfill({ json: plan }));
+  await page.addInitScript(() => {
+    const originalFetch = window.fetch.bind(window);
+    let runCount = 0;
+    const frame = (event: Record<string, unknown>) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`;
+    window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (!url.endsWith("/api/agent/run")) return originalFetch(input, init);
+      runCount += 1;
+
+      const firstRunEvents = [
+        { type: "run_started", taskId: "signup-validation", mode: "live", model: "nvidia/Nemotron-3_5-Lightning" },
+        { type: "milestone_updated", milestoneId: "understand", state: "complete", completedCount: 1, progress: 0, evidence: "Issue loaded." },
+        { type: "milestone_updated", milestoneId: "plan", state: "complete", completedCount: 2, progress: 20, evidence: "Approved plan attached." },
+      ];
+
+      if (runCount === 1) {
+        const body = new ReadableStream<Uint8Array>({
+          start(controller) {
+            const encoder = new TextEncoder();
+            for (const event of firstRunEvents) controller.enqueue(encoder.encode(frame(event)));
+            init?.signal?.addEventListener("abort", () => controller.error(new DOMException("Stopped", "AbortError")), { once: true });
+          },
+        });
+        return Promise.resolve(new Response(body, { headers: { "Content-Type": "text/event-stream" } }));
+      }
+
+      const checks = [
+        "Accessible strength feedback",
+        "Weak password guidance",
+        "Regression coverage",
+      ].map((name) => ({ name, status: "passed", details: "The fixed static fixture criterion matched.", evidenceSource: "static-fixture" }));
+      const result = {
+        mode: "live",
+        model: "nvidia/Nemotron-3_5-Lightning",
+        explanation: "The sample displays accessible strength feedback and blocks weak submissions.",
+        filesChanged: ["src/signup.tsx", "src/signup.test.tsx"],
+        diffsByFile: { "src/signup.tsx": "sample diff", "src/signup.test.tsx": "sample test diff" },
+        diff: "sample diff",
+        checks,
+        verification: { kind: "static-fixture", status: "passed", testsExecuted: false },
+        nextStep: "All static fixture criteria matched. No code or test process ran; review the diff and apply it in a real repository before relying on it.",
+      };
+      const completedEvents = [
+        { type: "run_started", taskId: "signup-validation", mode: "live", model: "nvidia/Nemotron-3_5-Lightning" },
+        { type: "milestone_updated", milestoneId: "generate", state: "complete", completedCount: 3, progress: 40, evidence: "Validated patch received." },
+        { type: "file_changed", path: "src/signup.tsx", summary: "Added strength feedback.", diff: "--- a/src/signup.tsx\n+++ b/src/signup.tsx" },
+        { type: "milestone_updated", milestoneId: "inspect", state: "complete", completedCount: 4, progress: 60, evidence: "Diff ready for review." },
+        ...checks.map((check) => ({ type: "check_result", result: check })),
+        { type: "milestone_updated", milestoneId: "test", state: "complete", completedCount: 5, progress: 80, evidence: "Static fixture criteria matched; no test was run." },
+        { type: "milestone_updated", milestoneId: "verify", state: "complete", completedCount: 6, progress: 100, evidence: "Static fixture checks matched." },
+        { type: "run_completed", result },
+      ];
+      return Promise.resolve(new Response(completedEvents.map(frame).join(""), { headers: { "Content-Type": "text/event-stream" } }));
+    };
+  });
+
+  await page.goto("/issue");
+  await page.getByRole("button", { name: /Make a plan/ }).click();
+  await expect(page).toHaveURL(/\/plan$/);
+  await page.getByRole("button", { name: "Approve this plan" }).click();
+  await expect(page).toHaveURL(/\/run$/);
+  await page.getByRole("button", { name: "Start the run" }).click();
+  await expect(page.getByRole("button", { name: "Stop request" })).toBeVisible();
+  await expect(page.getByText("2/6 verified")).toBeVisible();
+  await expect(page.getByText(/5 requests\/minute per client/)).toBeVisible();
+  await page.getByRole("button", { name: "Stop request" }).click();
+  await expect(page.getByRole("button", { name: "Retry the live request" })).toBeVisible();
+  await expect(page.getByText("2/6 verified")).toBeVisible();
+  await expect(page.getByText(/may already have processed and billed part/i)).toBeVisible();
+  await page.getByRole("button", { name: "Retry the live request" }).click();
+  await expect(page.getByRole("button", { name: /Review the change/ })).toBeVisible();
+  await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
+  await page.getByRole("button", { name: /Review the change/ }).click();
+  await expect(page).toHaveURL(/\/review$/);
+  await page.getByRole("button", { name: "Continue to verify" }).click();
+  await expect(page).toHaveURL(/\/verify$/);
+  await expect(page.getByRole("heading", { name: "3/3 fixture checks matched" })).toBeVisible();
+  await expect(page.getByText("Static fixture criteria (not executed tests)")).toBeVisible();
+  await expect(page.getByText("no code execution", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Every fixed content criterion matched/)).toBeVisible();
 });
 
 test("redirects locked pages to a truthful reset notice", async ({ page }) => {

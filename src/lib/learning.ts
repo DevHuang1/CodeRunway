@@ -13,14 +13,14 @@ const fileLearningSchema = z.object({
   lookFor: z.string().min(1),
 });
 
-const testLearningSchema = z.object({
+const checkLearningSchema = z.object({
   proves: z.string().min(1),
   ifItFails: z.string().min(1),
 });
 
 export type LearningNote = z.infer<typeof learningNoteSchema>;
 export type FileLearning = z.infer<typeof fileLearningSchema>;
-export type TestLearning = z.infer<typeof testLearningSchema>;
+export type CheckLearning = z.infer<typeof checkLearningSchema>;
 
 function validateCatalog<T>(schema: z.ZodType<T>, catalog: Record<string, unknown>): Record<string, T> {
   return z.record(z.string(), schema).parse(catalog);
@@ -52,10 +52,10 @@ export const CHECKPOINT_LEARNING = validateCatalog(learningNoteSchema, {
     reflectionQuestion: "Which changed line makes weak input visible to the user?",
   },
   test: {
-    concept: "Use tests as evidence about behavior.",
-    whyItMatters: "A passing check narrows uncertainty; it does not replace your understanding of the change.",
-    lookFor: "Each registered check describes one observable part of the expected outcome.",
-    reflectionQuestion: "What behavior would a failing check help you investigate first?",
+    concept: "Use static checks as limited evidence.",
+    whyItMatters: "A content match is a quick signal, not proof that code compiles or behaves at runtime.",
+    lookFor: "Each fixed criterion matches expected text or markup in the sample files; no program executes.",
+    reflectionQuestion: "What would need to run in a real project to verify this behavior more fully?",
   },
   verify: {
     concept: "Connect proof back to the original outcome.",
@@ -79,12 +79,12 @@ export const FILE_LEARNING = validateCatalog(fileLearningSchema, {
   },
   "src/signup.test.tsx": {
     concept: "A regression test for the user-visible behavior.",
-    whyItMatters: "The test protects the explanation a user relies on when a password is too short.",
+    whyItMatters: "The fixture criterion looks for the expected message in a test file, but does not execute that test.",
     lookFor: "The test types weak input and checks for the same message the form renders.",
   },
 });
 
-export const TEST_LEARNING = validateCatalog(testLearningSchema, {
+export const CHECK_LEARNING = validateCatalog(checkLearningSchema, {
   "Accessible strength feedback": {
     proves: "The password field exposes its strength status and associates the field with its feedback.",
     ifItFails: "Inspect the input attributes and confirm the status and error identifiers are connected to the field.",
@@ -107,6 +107,6 @@ export function getFileLearning(path: string): FileLearning | null {
   return FILE_LEARNING[path] ?? null;
 }
 
-export function getTestLearning(name: string): TestLearning | null {
-  return TEST_LEARNING[name] ?? null;
+export function getCheckLearning(name: string): CheckLearning | null {
+  return CHECK_LEARNING[name] ?? null;
 }

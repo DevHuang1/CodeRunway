@@ -10,7 +10,7 @@ import { StageGate } from "@/components/pages/shared/stage-gate";
 export function IssuePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { task, plan, runState, error, createPlan } = useCodeRunway();
+  const { task, plan, runState, error, provider, createPlan } = useCodeRunway();
   const resetNotice = searchParams.get("reset") === "1";
 
   async function handlePrimaryAction() {
@@ -30,7 +30,7 @@ export function IssuePage() {
         stage="issue"
         eyebrow="START HERE"
         title="Name the small change you want to make."
-        description="Begin with the outcome, not the implementation. CodeRunway will turn this sample issue into a path you can review before anything runs."
+        description="Begin with the outcome, not the implementation. CodeRunway will turn this sample issue into a path you can review before requesting a patch."
       >
         {resetNotice ? <div className="reset-notice" role="status">This browser session was reset safely. No progress was claimed.</div> : null}
         <div className="page-grid page-grid-issue">
@@ -46,7 +46,7 @@ export function IssuePage() {
             <p className="stack-note">{task?.stack.join(" · ")}</p>
             <div className="outcome-card">
               <span className="eyebrow">WHAT GOOD LOOKS LIKE</span>
-              <p>{task?.expectedOutcome ?? "A clear, testable result will appear here."}</p>
+              <p>{task?.expectedOutcome ?? "A clear result will appear here."}</p>
             </div>
             <div className="page-actions">
               <button type="button" className="button button-primary" onClick={() => void handlePrimaryAction()} disabled={!task || planning}>
@@ -54,17 +54,20 @@ export function IssuePage() {
                 {!planning ? <span aria-hidden="true">→</span> : null}
               </button>
             </div>
+            {provider?.mode === "live" ? (
+              <p className="field-help" role="note">Live mode can make one model request for the plan and another for the patch. Limits are 5 requests/minute per client and 20/hour for this app process; provider charges may apply.</p>
+            ) : null}
             {error ? <div className="error-box" role="alert"><strong>Let’s pause here</strong><span>{error}</span></div> : null}
           </section>
 
           <aside className="page-note" aria-label="How the workflow works">
             <span className="eyebrow">A QUIET START</span>
             <h2>You remain in control.</h2>
-            <p>First you review the path. Then you choose whether to run it. The sample workspace is fixed and safe to explore.</p>
+            <p>First you review the path. Then you choose whether to request a patch. The sample workspace is fixed; no code is executed.</p>
             <div className="note-list">
               <span><b>01</b> Understand the outcome</span>
               <span><b>02</b> Approve a small plan</span>
-              <span><b>03</b> Review proof at the end</span>
+              <span><b>03</b> Review the criteria and next step</span>
             </div>
             <LearningDisclosure
               className="learning-disclosure-note"

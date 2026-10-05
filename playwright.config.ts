@@ -9,6 +9,9 @@ export default defineConfig({
   use: {
     baseURL,
     trace: "on-first-retry",
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+      ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } }
+      : {}),
   },
   ...(process.env.PLAYWRIGHT_BASE_URL
     ? {}
