@@ -1,11 +1,13 @@
 node_modules/
 .pnpm-store/
 .next/
+.next-verification/
 out/
 dist/
 coverage/
 playwright-report/
 test-results/
+# Local environment files may contain paid-provider keys; never commit them.
 .env
 .env.local
 .env.*.local

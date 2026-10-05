@@ -1,7 +1,7 @@
 export type AgentMode = "live" | "fallback";
 export type AgentPreference = "auto" | "live" | "fallback";
 export type MilestoneState = "pending" | "active" | "complete" | "failed";
-export type TestStatus = "passed" | "failed";
+export type CheckStatus = "passed" | "failed";
 
 export interface FixtureFile {
   path: string;
@@ -39,10 +39,17 @@ export interface AgentPlan {
   createdAt: string;
 }
 
-export interface TestResult {
+export interface CheckResult {
   name: string;
-  status: TestStatus;
+  status: CheckStatus;
   details: string;
+  evidenceSource: "static-fixture";
+}
+
+export interface FixtureVerification {
+  kind: "static-fixture";
+  status: "passed" | "failed";
+  testsExecuted: false;
 }
 
 export interface AgentResult {
@@ -52,7 +59,8 @@ export interface AgentResult {
   filesChanged: string[];
   diffsByFile: Record<string, string>;
   diff: string;
-  tests: TestResult[];
+  checks: CheckResult[];
+  verification: FixtureVerification;
   nextStep: string;
   usage?: {
     inputTokens?: number;
@@ -82,8 +90,8 @@ export type AgentEvent =
       diff: string;
     }
   | {
-      type: "test_result";
-      result: TestResult;
+      type: "check_result";
+      result: CheckResult;
     }
   | {
       type: "run_completed";
@@ -95,7 +103,7 @@ export type AgentEvent =
       message: string;
     };
 
-export interface ModelAgentOutput {
+export interface ModelPlanOutput {
   goal: string;
   milestones: Array<{
     id: string;
@@ -103,14 +111,13 @@ export interface ModelAgentOutput {
     detail: string;
     evidence: string;
   }>;
+}
+
+export interface ModelPatchOutput {
   edits: Array<{
     path: string;
     after: string;
     summary: string;
   }>;
   explanation: string;
-  tests: Array<{
-    name: string;
-    details: string;
-  }>;
 }

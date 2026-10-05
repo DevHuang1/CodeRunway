@@ -25,7 +25,7 @@ function ActivityRows({ activities }: { activities: ReturnType<typeof useCodeRun
 
 export function RunPage() {
   const router = useRouter();
-  const { milestones, progress, verifiedCheckpointCount, activities, provider, runMode, runState, planApproved, result, startRun, pauseRun } = useCodeRunway();
+  const { milestones, progress, verifiedCheckpointCount, activities, provider, runMode, runState, planApproved, result, startRun, pauseRun, stopRun } = useCodeRunway();
   const running = runState === "running";
   const complete = runState === "complete" && Boolean(result);
   const hasFailedResult = runState === "error" && Boolean(result);
@@ -42,7 +42,7 @@ export function RunPage() {
         stage="run"
         eyebrow="THE RUN"
         title="Stay with the next checkpoint."
-        description="The runway only moves when the sample workspace sends evidence. You can pause without losing your place or claiming progress."
+        description={runMode === "live" ? "Nemotron returns a patch through Token Factory. The app checks fixture contents only; no code or tests execute. Stopping may not prevent provider billing for work already processed." : "The runway only moves when the sample workspace sends evidence. Pause without losing your place or claiming progress."}
       >
         <div className="page-grid page-grid-run">
           <section className="page-card run-card" aria-labelledby="run-title">
@@ -51,21 +51,30 @@ export function RunPage() {
                 <span className="eyebrow">EVIDENCE-BACKED PROGRESS</span>
                 <h2 id="run-title">A little more clarity, one step at a time.</h2>
               </div>
-              <span className="provider-chip"><i /> {runMode === "live" ? "Live connection" : "Local sample"}</span>
+              <span className="provider-chip"><i /> {runMode === "live" ? "Nebius Token Factory" : "Local sample"}</span>
             </div>
             <GoalGradient progress={progress} milestones={milestones} />
-            <LearningDisclosure title={activeLearning.concept}>
-              <p><strong>Why it matters:</strong> {activeLearning.whyItMatters}</p>
-              <p><strong>Look for:</strong> {activeLearning.lookFor}</p>
-            </LearningDisclosure>
+            {activeMilestone?.id === "test" ? (
+              <LearningDisclosure title="Static fixture checks, not executed tests">
+                <p>{runMode === "live" ? "The model returns a patch, then the app checks fixed sample content for expected text and markup." : "The local fallback checks fixed sample content for expected text and markup."} No code, TypeScript, or Vitest process runs.</p>
+                <p><strong>Look for:</strong> every result is labeled “Static fixture criteria.”</p>
+              </LearningDisclosure>
+            ) : (
+              <LearningDisclosure title={activeLearning.concept}>
+                <p><strong>Why it matters:</strong> {activeLearning.whyItMatters}</p>
+                <p><strong>Look for:</strong> {activeLearning.lookFor}</p>
+              </LearningDisclosure>
+            )}
             <div className="page-actions">
               <button type="button" className="button button-quiet" onClick={() => router.push("/plan")} disabled={running}>Back to plan</button>
               {complete || hasFailedResult ? (
                 <button type="button" className="button button-primary" onClick={() => router.push("/review")}>{hasFailedResult ? "Review the result" : "Review the change"} <span aria-hidden="true">→</span></button>
               ) : running ? (
-                <button type="button" className="button button-quiet" onClick={pauseRun}>Pause the run <span aria-hidden="true">Ⅱ</span></button>
+                runMode === "live"
+                  ? <button type="button" className="button button-quiet" onClick={stopRun}>Stop request <span aria-hidden="true">■</span></button>
+                  : <button type="button" className="button button-quiet" onClick={pauseRun}>Pause the run <span aria-hidden="true">Ⅱ</span></button>
               ) : (
-                <button type="button" className="button button-primary" onClick={() => void startRun()} disabled={!planApproved}>{runState === "paused" ? `Resume from checkpoint ${verifiedCheckpointCount + 1}` : runState === "error" ? "Try the run again" : "Start the run"}<span aria-hidden="true">→</span></button>
+                <button type="button" className="button button-primary" onClick={() => void startRun()} disabled={!planApproved}>{runState === "paused" ? `Resume from checkpoint ${verifiedCheckpointCount + 1}` : runState === "cancelled" ? "Retry the live request" : runState === "error" ? "Try the run again" : "Start the run"}<span aria-hidden="true">→</span></button>
               )}
             </div>
           </section>
@@ -83,7 +92,9 @@ export function RunPage() {
 
             <section className="page-note" aria-label="Provider status">
               <div className="connection-card-top"><span className={`connection-mark ${runMode}`} /><div><span className="eyebrow">CONNECTION</span><strong>{runMode === "live" ? "Nebius Token Factory" : "Local sample mode"}</strong></div></div>
-              <p className="connection-copy">{runMode === "live" ? provider?.model ?? "NVIDIA Nemotron" : "No network or API key is needed for this walkthrough."}</p>
+              <p className="connection-copy">{runMode === "live" ? provider?.model ?? "nvidia/Nemotron-3_5-Lightning" : "Static fixture checks only; no code or test process runs."}</p>
+              {runMode === "live" ? <p className="field-help">Limits: {provider?.limits?.perClientPerMinute ?? 5} requests/minute per client, {provider?.limits?.perApplicationPerHour ?? 20}/hour for this app process, {provider?.limits?.concurrentRequests ?? 2} at once. Token Factory may still bill work processed before a stop.</p> : null}
+              {result ? <p className="field-help">Verification: static fixture criteria only. No code or test process ran.</p> : null}
             </section>
           </aside>
         </div>
