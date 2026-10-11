@@ -46,6 +46,13 @@ The user session and request limits are held in process memory. The app has no s
 | SRS-22 | Live requests are capped at 5 per client per minute, 20 per app process per hour, and 2 concurrent calls. The process-local limiter is documented as non-durable and non-distributed. |
 | SRS-23 | Each provider call is limited to at most 8,192 output tokens and 120 seconds, with automatic SDK retries disabled. |
 | SRS-24 | Agent POST bodies are streamed and rejected above 16 KiB before provider calls are made. |
+| SRS-25 | A failed static criterion is never presented as passed, and progress does not reach completion unless every criterion matched. |
+| SRS-26 | No page describes the evaluator as running tests, executing code, or verifying compiled behavior. |
+| SRS-27 | CI runs lint, typecheck, unit tests, production build, and Playwright with `AGENT_MODE=fallback`, and never contacts Nebius. |
+| SRS-28 | CI fails if a key-shaped secret or `.env.local` appears in the tracked tree. |
+| SRS-29 | Public About, Privacy, and Terms of Service pages are served statically at `/about`, `/privacy`, and `/terms`, linked from every footer, and state the static-only evaluation boundary honestly. |
+| SRS-30 | The privacy page documents localStorage theme persistence, in-memory hashed-IP rate limiting, and exactly what is sent to Token Factory in live mode. |
+| SRS-31 | `next.config.ts` disables `output: "standalone"` when `process.env.VERCEL` is set, keeping standalone output for Docker only, and the SSE response sets no hop-by-hop `Connection` header. |
 
 ## 3. Runtime configuration
 
@@ -93,8 +100,9 @@ Live plan and run requests consume one rate-limit permit each. A retry is a new 
 - **Reliability:** deterministic fallback works without a network or key; provider failures never masquerade as passing evidence.
 - **Accessibility:** semantic HTML, keyboard operation, visible focus, progress semantics, live announcements, and reduced-motion support.
 - **Performance:** fallback completes quickly; live requests time out after at most 120 seconds and can be stopped from the browser.
-- **Cost:** tests never call Nebius; no automatic model retry or repair loop; the process-local limiter is not represented as a provider-side spend quota.
-- **Deployment:** use a standard Next.js runtime. No cloud job, runner image, CLI identity, or sandbox setup is required.
+- **Cost:** tests never call Nebius; CI pins `AGENT_MODE=fallback`; no automatic model retry or repair loop; the process-local limiter is not represented as a provider-side spend quota.
+- **Deployment:** use a standard Next.js runtime. No cloud job, runner image, CLI identity, or sandbox setup is required. On Vercel, `ENABLE_EXPERIMENTAL_COREPACK=1` is required for the pinned pnpm version; standalone output is disabled automatically because Vercel's adapter conflicts with Next 16.3 standalone builds.
+- **Honesty:** a failed criterion is never rendered as passed, and no page claims executed tests, compilation, or runtime verification.
 
 ## 6. Traceability matrix
 
@@ -109,6 +117,8 @@ Live plan and run requests consume one rate-limit permit each. A retry is a new 
 | BR-04 | UR-07 | SRS-04, SRS-05, SRS-11 | Provider selection and health tests |
 | BR-05 | UR-08 | SRS-06, SRS-07, SRS-08, SRS-22, SRS-23, SRS-24 | Safety, limiter, and mocked live-provider tests |
 | BR-06 | UR-08, UR-09, UR-10 | SRS-06, SRS-10, SRS-20 | Browser and reduced-motion checks |
+| BR-04 | UR-06, UR-07 | SRS-25, SRS-26, SRS-27, SRS-28 | Failure-state and executed-test-claim browser tests; CI workflow |
+| BR-05 | UR-06, UR-08 | SRS-29, SRS-30, SRS-31 | Public-pages browser tests; deployment configuration review |
 
 ## 7. Acceptance criteria
 

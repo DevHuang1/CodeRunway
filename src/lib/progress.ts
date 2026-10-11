@@ -35,7 +35,7 @@ export const MILESTONE_BLUEPRINT = [
     id: "verify",
     label: "Verify",
     detail: "Confirm the task is complete and name the next step.",
-    evidence: "All required checks passed and the diff is ready to review.",
+    evidence: "Every fixed fixture criterion is reported and the diff is ready to review.",
   },
 ] as const;
 

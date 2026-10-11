@@ -511,6 +511,34 @@ html[data-theme="dark"] .landing-principle-list, html[data-theme="dark"] .landin
 html[data-theme="dark"] .landing-shell::before { border-color: rgba(131, 194, 184, .11); }
 html[data-theme="dark"] .landing-shell::after { border-color: rgba(231, 154, 142, .1); }
 
+/* Static info pages (about, privacy, terms) */
+
+.static-content { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 72px 0 58px; }
+.static-heading h1 { margin: 15px 0 10px; color: var(--ink); font-size: clamp(34px, 5vw, 56px); font-weight: 620; letter-spacing: -.075em; line-height: 1.03; }
+.static-updated { margin: 0; color: var(--muted); font-size: 10px; }
+.static-body { margin-top: 38px; }
+.static-body section { border-top: 1px solid rgba(215, 208, 196, .72); padding: 29px 0; }
+.static-body h2 { margin: 0 0 9px; color: var(--ink); font-size: 16px; font-weight: 680; letter-spacing: -.03em; }
+.static-body p { margin: 0; color: var(--ink-soft); font-size: 12px; line-height: 1.78; }
+.static-body ul { display: grid; gap: 6px; margin: 4px 0 0; padding-left: 18px; }
+.static-body li { color: var(--ink-soft); font-size: 12px; line-height: 1.7; }
+.static-body code { border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; color: var(--ink); background: rgba(255, 253, 249, .72); font-size: 11px; }
+.static-body a { color: var(--ink); font-weight: 650; text-decoration-color: var(--teal); text-underline-offset: 3px; }
+.static-body a:hover { color: var(--teal); }
+.static-body a:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 3px; }
+.static-footer-nav { display: flex; align-items: center; gap: 15px; }
+.static-footer-nav a { color: var(--muted); font-size: 9px; text-decoration: none; transition: color .2s ease; }
+.static-footer-nav a:hover { color: var(--ink); }
+.static-footer-nav a:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 3px; }
+
+@media (max-width: 780px) {
+  .static-content { padding: 54px 0 44px; }
+  .static-footer-nav { margin: 4px 0; }
+}
+
+html[data-theme="dark"] .static-body section { border-top-color: rgba(61, 64, 56, .72); }
+html[data-theme="dark"] .static-body code { border-color: #43504b; background: rgba(28, 37, 34, .74); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }

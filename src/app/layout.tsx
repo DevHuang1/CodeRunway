@@ -3,8 +3,8 @@ import "./globals.css";
 import { AppProviders } from "@/components/app-providers";
 
 export const metadata: Metadata = {
-  title: "CodeRunway — From a coding issue to proof",
-  description: "A calm, visible path for turning one small coding issue into a change you can read, test, and explain.",
+  title: "CodeRunway — From a coding issue to evidence",
+  description: "A calm, visible path for turning one small coding issue into a change you can read, judge against fixed criteria, and explain.",
 };
 
 const themeBootstrap = `(() => {

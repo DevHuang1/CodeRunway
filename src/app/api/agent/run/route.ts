@@ -99,12 +99,12 @@ export async function POST(request: Request) {
             signal: runSignal,
             onPatch: ({ edits }) => {
               patchAnnounced = true;
-              checkpoint(2, "The structured patch passed task and file-allowlist validation.");
+              checkpoint(2, "The structured patch passed schema and file-allowlist checks.");
               for (const edit of edits) {
                 const before = task.files.find((file) => file.path === edit.path)?.before ?? "";
                 emit({ type: "file_changed", path: edit.path, summary: edit.summary, diff: fileDiff(before, edit.after, edit.path) });
               }
-              checkpoint(3, "The validated changed files are ready for review.");
+              checkpoint(3, "The allowlist-checked changed files are ready for review.");
             },
             onCheckResults: (checks) => {
               for (const check of checks) emit({ type: "check_result", result: check });
@@ -143,6 +143,7 @@ export async function POST(request: Request) {
   });
 
   return new Response(stream, { headers: {
-    "Cache-Control": "no-cache, no-transform", Connection: "keep-alive", "Content-Type": "text/event-stream",
+    // No Connection header: hop-by-hop headers are invalid on HTTP/2 and Vercel strips them.
+    "Cache-Control": "no-cache, no-transform", "Content-Type": "text/event-stream",
   } });
 }

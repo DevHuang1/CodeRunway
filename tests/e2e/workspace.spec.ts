@@ -10,8 +10,11 @@ test("renders the quiet product landing page", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/$/);
   expect(apiRequests).toEqual([]);
-  await expect(page.getByRole("heading", { name: "Move from a coding issue to proof." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Move from a coding issue to evidence." })).toBeVisible();
   await expect(page.getByText("A CLEARER WAY TO FINISH ONE USEFUL CHANGE.", { exact: true })).toBeVisible();
+  // The landing page must not promise executed tests or verified code.
+  await expect(page.locator("main")).not.toContainText(/tests? (were )?(run|ran|passed|executed)/i);
+  await expect(page.locator("main")).not.toContainText(/verified code/i);
   await expect(page.locator(".landing-hero")).not.toContainText(/\bAI\b/i);
   await expect(page.locator(".landing-note")).toContainText("No progress is claimed until evidence arrives.");
 
@@ -45,7 +48,7 @@ test("renders the quiet product landing page", async ({ page }) => {
 test("keeps the landing page readable on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Move from a coding issue to proof." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Move from a coding issue to evidence." })).toBeVisible();
   const mobileCta = page.getByRole("link", { name: "Start with the sample issue" });
   await mobileCta.focus();
   await expect(mobileCta).toBeFocused();

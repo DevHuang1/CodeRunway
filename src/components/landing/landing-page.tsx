@@ -6,8 +6,8 @@ const runwaySteps = [
   { number: "02", name: "Plan", detail: "choose the checkpoints" },
   { number: "03", name: "Patch", detail: "make the small change" },
   { number: "04", name: "Inspect", detail: "read what changed" },
-  { number: "05", name: "Test", detail: "look for evidence" },
-  { number: "06", name: "Verify", detail: "leave with proof" },
+  { number: "05", name: "Check", detail: "match fixed criteria" },
+  { number: "06", name: "Verify", detail: "leave with evidence" },
 ];
 
 const workflowSteps = [
@@ -23,8 +23,8 @@ const workflowSteps = [
   },
   {
     number: "03",
-    title: "Leave with proof",
-    description: "Read the changed files, understand the tests, and finish with evidence you can explain.",
+    title: "Leave with evidence",
+    description: "Read the changed files, see which static fixture criteria matched, and finish with a next step you can explain.",
   },
 ];
 
@@ -58,9 +58,9 @@ export function LandingPage() {
         <section className="landing-hero" aria-labelledby="landing-title">
           <div className="landing-hero-copy">
             <span className="eyebrow accent-eyebrow">A CLEARER WAY TO FINISH ONE USEFUL CHANGE.</span>
-            <h1 id="landing-title">Move from a coding issue to <em>proof.</em></h1>
+            <h1 id="landing-title">Move from a coding issue to <em>evidence.</em></h1>
             <p>
-              CodeRunway gives students and solo builders a small, visible path from a coding question to a change they can read, test, and explain.
+              CodeRunway gives students and solo builders a small, visible path from a coding question to a change they can read, judge against fixed criteria, and explain.
             </p>
             <div className="landing-actions">
               <Link className="landing-button landing-button-primary" href="/issue">Start with the sample issue <span aria-hidden="true">→</span></Link>
@@ -91,7 +91,7 @@ export function LandingPage() {
             </ol>
             <div className="landing-runway-footer">
               <span>Start with a question</span>
-              <span>Finish with proof</span>
+              <span>Finish with evidence</span>
             </div>
           </figure>
         </section>
@@ -148,6 +148,12 @@ export function LandingPage() {
 
       <footer className="footer shell-width landing-footer">
         <span>CodeRunway / safe sample workspace</span>
+        <nav className="static-footer-nav" aria-label="Project pages">
+          <Link href="/about">About</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms of Service</Link>
+          <a href="https://github.com/DevHuang1/CodeRunway/blob/main/LICENSE">MIT license</a>
+        </nav>
         <span>Progress is evidence, not pressure.</span>
       </footer>
     </main>

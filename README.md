@@ -52,7 +52,16 @@ pnpm build
 pnpm test:e2e
 ```
 
-Automated tests use mocks and deterministic fallback behavior; they never spend Token Factory credits. Any live smoke check is opt-in and should be run deliberately after reviewing current model access and account usage controls.
+GitHub Actions runs this same sequence on every push and pull request. CI sets `AGENT_MODE=fallback`
+for the whole job, so it never reaches Nebius and never spends Token Factory credits; live-provider
+behavior is covered by tests that stub `fetch` and intercept the browser's requests.
+
+`pnpm install` needs the committed `pnpm-workspace.yaml`, which allows the `esbuild` and
+`unrs-resolver` build scripts. Without it pnpm 11 aborts the install and no script runs.
+
+The browser suite runs against `next dev` with `AGENT_MODE=fallback` pinned in
+`playwright.config.ts`. Any live smoke check is opt-in and should be run deliberately after
+reviewing current model access and account usage controls.
 
 ## Product design
 
@@ -63,6 +72,24 @@ Progress is represented by six evidence-backed checkpoints: understand, plan, ge
 - [Business requirements](docs/business-requirements.md)
 - [User requirements](docs/user-requirements.md)
 - [Software requirements](docs/software-requirements.md)
+- [Demo script](docs/demo-script.md) — under three minutes, with the live and fallback beats marked
+- [Submission checklist](docs/submission-checklist.md) — this build mapped to the published rules and judging criteria
+- [Track-fit recommendation](docs/track-fit.md) — why Best Apps and Agents fits the no-sandbox scope
+
+## Deploy to Vercel
+
+The app is a standard Next.js deployment. Two settings are required for the pinned toolchain:
+
+1. Set `ENABLE_EXPERIMENTAL_COREPACK=1` in the project environment so Vercel uses the `packageManager` pin (`pnpm@11.19.0`). Without it, Vercel guesses pnpm 9 and the install fails on `pnpm-workspace.yaml`.
+2. Set your provider variables (`AGENT_MODE`, `NEBIUS_API_KEY`) in the Vercel dashboard, production environment only. Never commit them.
+
+`next.config.ts` disables `output: "standalone"` on Vercel automatically (it is kept for the Dockerfile). The Hobby tier's 300-second function limit covers the 120-second live request cap.
+
+If the URL is public, set the smallest spending/usage limits the Nebius account allows before going live: the in-memory limiter is per-instance and is not a distributed quota.
+
+## Public pages
+
+Besides the workflow, the app serves an About page at `/about`, a privacy policy at `/privacy`, and plain-language terms of service at `/terms`, all linked from every footer. The [MIT license](LICENSE) sits at the repository root.
 
 ## Devpost readiness
 

@@ -52,15 +52,15 @@ export const CHECKPOINT_LEARNING = validateCatalog(learningNoteSchema, {
     reflectionQuestion: "Which changed line makes weak input visible to the user?",
   },
   test: {
-    concept: "Use static checks as limited evidence.",
+    concept: "Use static fixture checks as limited evidence.",
     whyItMatters: "A content match is a quick signal, not proof that code compiles or behaves at runtime.",
     lookFor: "Each fixed criterion matches expected text or markup in the sample files; no program executes.",
     reflectionQuestion: "What would need to run in a real project to verify this behavior more fully?",
   },
   verify: {
-    concept: "Connect proof back to the original outcome.",
+    concept: "Connect the evidence back to the original outcome.",
     whyItMatters: "Completion is stronger when the diff, checks, and next step tell the same story.",
-    lookFor: "All required checks pass, the changed files are known, and the next step is explicit.",
+    lookFor: "Every fixed criterion is reported as matched or flagged, the changed files are known, and the next step is explicit.",
     reflectionQuestion: "Can you explain why this patch addresses the original request?",
   },
 });
@@ -94,7 +94,7 @@ export const CHECK_LEARNING = validateCatalog(checkLearningSchema, {
     ifItFails: "Check the strength threshold and the condition that renders the inline message.",
   },
   "Regression coverage": {
-    proves: "The expected weak-password behavior is represented in a test rather than only in the implementation.",
+    proves: "The expected weak-password message also appears in the fixture test file's contents, not only in the implementation.",
     ifItFails: "Compare the test's typed input and expected message with the form's actual copy.",
   },
 });
