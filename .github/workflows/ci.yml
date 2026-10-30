@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, unit, build, browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # CI never contacts Nebius. AGENT_MODE=fallback is the server-side switch that
+      # makes a Token Factory call impossible, and it takes precedence over any
+      # .env file, so a stray local key cannot be used from a pull request.
+      AGENT_MODE: fallback
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Fail early if a provider secret leaked into the tracked tree
+        run: |
+          if git grep -nE 'NEBIUS_API_KEY=[A-Za-z0-9]' -- . ':!.env.example'; then
+            echo "::error::A Nebius API key appears to be committed. Remove it and rotate the key."
+            exit 1
+          fi
+          if git ls-files --error-unmatch .env.local >/dev/null 2>&1; then
+            echo "::error::.env.local is tracked. It must stay Git-ignored."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # No `cache: pnpm` here: setup-node resolves the cache path by invoking
+          # pnpm, which does not exist on PATH until corepack runs below.
+
+      - name: Enable the pinned pnpm from packageManager
+        run: |
+          corepack enable
+          corepack install
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
+
+      - name: Install the Chromium build for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: pnpm test:e2e
+
+      - name: Upload the Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

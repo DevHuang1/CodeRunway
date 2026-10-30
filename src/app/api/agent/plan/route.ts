@@ -6,6 +6,9 @@ import { getLiveConfigurationIssues, resolveAgentMode } from "@/lib/provider";
 import { readBoundedJson, RequestBodyTooLargeError } from "@/lib/request-json";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+// Leave room for the provider's bounded 120-second timeout and response handling.
+export const maxDuration = 150;
 
 const requestSchema = z.object({ taskId: z.string().min(1).max(80) }).strict();
 
