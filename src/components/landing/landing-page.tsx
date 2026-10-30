@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AccountMenu } from "@/components/auth/account-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const runwaySteps = [
@@ -50,6 +51,7 @@ export function LandingPage() {
         </Link>
         <div className="landing-header-actions">
           <ThemeToggle />
+          <AccountMenu />
           <Link className="landing-header-link" href="/issue">Open workspace <span aria-hidden="true">→</span></Link>
         </div>
       </header>
@@ -96,6 +98,30 @@ export function LandingPage() {
           </figure>
         </section>
 
+        <section className="landing-section landing-access" aria-labelledby="access-title">
+          <div className="landing-section-intro">
+            <span className="eyebrow">SIGN IN OR STAY A GUEST</span>
+            <div>
+              <h2 id="access-title">A role for the way you want to look around.</h2>
+              <p>The sample workspace is open to everyone. Signing in adds a small role badge and, for admins, a read-only operations view.</p>
+            </div>
+          </div>
+          <div className="landing-access-grid">
+            <article className="landing-access-card">
+              <span className="landing-access-role">USER</span>
+              <h3>Walk the full sample flow.</h3>
+              <p>Choose User and use the demo code shown below the access field. The workflow, review, and static fixture checks stay the same.</p>
+              <Link className="landing-button landing-button-secondary" href="/login">Sign in as user <span aria-hidden="true">→</span></Link>
+            </article>
+            <article className="landing-access-card landing-access-card-admin">
+              <span className="landing-access-role">ADMIN</span>
+              <h3>Open the operations view.</h3>
+              <p>Admins also see safe provider status and current limits. The admin access code is kept on the server.</p>
+              <Link className="landing-button landing-button-secondary" href="/login">Admin sign-in <span aria-hidden="true">→</span></Link>
+            </article>
+          </div>
+        </section>
+
         <section className="landing-section landing-how" id="how-it-works" aria-labelledby="how-title">
           <div className="landing-section-intro">
             <span className="eyebrow">HOW IT WORKS</span>
@@ -128,6 +154,35 @@ export function LandingPage() {
           </ul>
         </section>
 
+        <section className="landing-section landing-faq" id="faq" aria-labelledby="faq-title">
+          <div className="landing-section-intro">
+            <span className="eyebrow">COMMON QUESTIONS</span>
+            <div>
+              <h2 id="faq-title">A few honest answers.</h2>
+              <p>The short version: the workspace is a fixed sample, the checks are static, and sign-in is a demo role switch.</p>
+            </div>
+          </div>
+          <div className="landing-faq-list">
+            <details>
+              <summary>Do I need an account?<span aria-hidden="true">+</span></summary>
+              <p>No. The sample workspace is open. The optional sign-in uses one shared access code per role and creates no personal profile.</p>
+            </details>
+            <details>
+              <summary>What does the admin role unlock?<span aria-hidden="true">+</span></summary>
+              <p>A read-only admin console with safe provider status, limits, and quick links. It does not expose secrets or change model settings.</p>
+            </details>
+            <details>
+              <summary>Does CodeRunway run my code?<span aria-hidden="true">+</span></summary>
+              <p>No. It checks fixed file contents against static fixture criteria. It does not compile TypeScript, execute generated code, or run tests.</p>
+            </details>
+            <details>
+              <summary>Can I use my own repository?<span aria-hidden="true">+</span></summary>
+              <p>Not in this build. The sample issue and the two editable files are fixed so the evidence stays honest and bounded.</p>
+            </details>
+          </div>
+          <Link className="landing-faq-link" href="/faq">Read all questions <span aria-hidden="true">→</span></Link>
+        </section>
+
         <section className="landing-tech-note" aria-labelledby="technology-title">
           <div>
             <span className="eyebrow">A SMALL TECHNOLOGY NOTE</span>
@@ -142,7 +197,10 @@ export function LandingPage() {
             <h2 id="cta-title">Bring one small issue to the runway.</h2>
             <p>Start with the fixed sample task and decide what happens next.</p>
           </div>
-          <Link className="landing-button landing-button-primary" href="/issue">Open the sample workspace <span aria-hidden="true">→</span></Link>
+          <div className="landing-cta-actions">
+            <Link className="landing-button landing-button-primary" href="/issue">Open the sample workspace <span aria-hidden="true">→</span></Link>
+            <Link className="landing-button landing-button-secondary" href="/login">Sign in</Link>
+          </div>
         </section>
       </div>
 
@@ -150,8 +208,11 @@ export function LandingPage() {
         <span>CodeRunway / safe sample workspace</span>
         <nav className="static-footer-nav" aria-label="Project pages">
           <Link href="/about">About</Link>
+          <Link href="/faq">FAQ</Link>
+          <Link href="/contact">Contact</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms of Service</Link>
+          <Link href="/accessibility">Accessibility</Link>
           <a href="https://github.com/DevHuang1/CodeRunway/blob/main/LICENSE">MIT license</a>
         </nav>
         <span>Progress is evidence, not pressure.</span>

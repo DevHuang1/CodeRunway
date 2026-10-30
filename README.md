@@ -24,6 +24,21 @@ Open [http://localhost:3000](http://localhost:3000). The five-page flow is `/iss
 
 With `AGENT_MODE=auto`, the app uses Token Factory when `NEBIUS_API_KEY` is present and otherwise runs the deterministic fallback. Use `AGENT_MODE=fallback` to prevent any model call. `AGENT_MODE=live` requires the server-only key. The Token Factory endpoint and model (`nvidia/Nemotron-3_5-Lightning`) are fixed in server code; no custom URL or higher-priced model override is accepted.
 
+## Demo sign-in
+
+The workspace is open without signing in. The optional demo sign-in at `/login` is a role switch:
+choose **User** or **Admin** from the dropdown, then enter the access code. The user demo code is
+`TESTUSER` and is shown at the bottom of the password field. The admin demo code is `STUDYADMIN`;
+the admin console at `/admin` is read-only and shows safe provider status and limits.
+
+The codes are checked server-side. A successful sign-in sets one signed, `HttpOnly`,
+`SameSite=Lax` session cookie for up to eight hours; logging out deletes it. There is no account
+database or personal profile. The user code is the public demo code `TESTUSER`; the admin code is
+`STUDYADMIN` by default. These default codes are public demo credentials, not secrets. For any
+public deployment, set `AUTH_SECRET` and `ADMIN_PASSWORD` to your own server-side values. The app
+also honors an empty `.env.local` entry by falling back to the demo defaults, so remove or fill
+the variables deliberately.
+
 ## Cost and key-protection limits
 
 The app enforces these server-side limits before live API requests:
@@ -78,18 +93,37 @@ Progress is represented by six evidence-backed checkpoints: understand, plan, ge
 
 ## Deploy to Vercel
 
-The app is a standard Next.js deployment. Two settings are required for the pinned toolchain:
+Vercel detects the Next.js App Router. The checked-in [`vercel.json`](vercel.json) keeps its
+install and build commands aligned with the local/CI scripts; leave the project root at `./`
+and the output directory on Vercel's Next.js default.
 
-1. Set `ENABLE_EXPERIMENTAL_COREPACK=1` in the project environment so Vercel uses the `packageManager` pin (`pnpm@11.19.0`). Without it, Vercel guesses pnpm 9 and the install fails on `pnpm-workspace.yaml`.
-2. Set your provider variables (`AGENT_MODE`, `NEBIUS_API_KEY`) in the Vercel dashboard, production environment only. Never commit them.
+Set these project environment variables before deploying:
 
-`next.config.ts` disables `output: "standalone"` on Vercel automatically (it is kept for the Dockerfile). The Hobby tier's 300-second function limit covers the 120-second live request cap.
+- `ENABLE_EXPERIMENTAL_COREPACK=1` for Production, Preview, and Development. This makes Corepack honor the root `packageManager` pin (`pnpm@11.19.0`); the settings-only `pnpm-workspace.yaml` also requires pnpm 10 or newer.
+- `AGENT_MODE=auto` for Production and Preview. Preview deploys without a provider key use the deterministic fallback.
+- `NEBIUS_API_KEY` in Production only, stored as a sensitive server-side variable. Never prefix it with `NEXT_PUBLIC_`, put it in source control, or add it to Preview unless you intentionally want live model calls there.
+- Optional: `MAX_OUTPUT_TOKENS=8192` and `REQUEST_TIMEOUT_MS=120000`. These are already the server-side defaults and are hard-capped by the app.
 
-If the URL is public, set the smallest spending/usage limits the Nebius account allows before going live: the in-memory limiter is per-instance and is not a distributed quota.
+`next.config.ts` disables `output: "standalone"` on Vercel automatically (it is kept for Docker).
+The plan and streamed-run handlers explicitly use the Node.js runtime and a 150-second function
+budget, leaving response overhead beyond the 120-second provider timeout. Confirm the Vercel
+project's function duration supports that value (Fluid Compute is enabled by default on current
+Vercel projects); function time is billable while a streamed response is open.
+
+Before making live mode public, set the smallest practical spending/usage limits in Nebius and
+configure a Vercel Firewall rate-limit rule for `POST /api/agent/plan` and
+`POST /api/agent/run`. The app's in-memory limiter is per-instance, not a distributed quota, so
+it cannot enforce a hard global spending cap across Vercel's scaled function instances. If you
+cannot configure that protection, deploy with `AGENT_MODE=fallback` and omit the provider key.
+
+After importing the GitHub repository, verify the first Preview deployment with
+`GET /api/health`, then complete the fallback browser flow. Only add the production key after
+the build succeeds and the public rate-limit/billing controls are in place. The Vercel dashboard
+settings and provider key are not created or changed by this repository.
 
 ## Public pages
 
-Besides the workflow, the app serves an About page at `/about`, a privacy policy at `/privacy`, and plain-language terms of service at `/terms`, all linked from every footer. The [MIT license](LICENSE) sits at the repository root.
+Besides the workflow, the app serves an About page at `/about`, a FAQ at `/faq`, a contact page at `/contact`, a privacy policy at `/privacy`, plain-language terms of service at `/terms`, and an accessibility statement at `/accessibility`, all linked from every footer. The demo sign-in lives at `/login`, and the read-only admin console at `/admin`. The [MIT license](LICENSE) sits at the repository root.
 
 ## Devpost readiness
 

@@ -9,6 +9,8 @@ import type { AgentEvent, AgentPlan, CheckResult } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+// Leave room for the provider's bounded 120-second timeout and SSE completion.
+export const maxDuration = 150;
 
 const requestSchema = z.object({ taskId: z.string().min(1).max(80), plan: z.unknown() }).strict();
 const milestoneIds = ["understand", "plan", "generate", "inspect", "test", "verify"] as const;

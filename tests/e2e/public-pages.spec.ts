@@ -11,8 +11,11 @@ test("links the public pages from the landing footer", async ({ page }) => {
   const nav = page.getByRole("navigation", { name: "Project pages" }).first();
   await expect(nav).toBeVisible();
   await expect(nav.getByRole("link", { name: "About" })).toHaveAttribute("href", "/about");
+  await expect(nav.getByRole("link", { name: "FAQ" })).toHaveAttribute("href", "/faq");
+  await expect(nav.getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact");
   await expect(nav.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/privacy");
   await expect(nav.getByRole("link", { name: "Terms of Service" })).toHaveAttribute("href", "/terms");
+  await expect(nav.getByRole("link", { name: "Accessibility" })).toHaveAttribute("href", "/accessibility");
   await expect(nav.getByRole("link", { name: "MIT license" })).toHaveAttribute("href", /CodeRunway\/blob\/main\/LICENSE/);
 });
 
@@ -30,10 +33,11 @@ test("about page names the real provider usage and the deliberate limits", async
 test("privacy page describes what leaves the device without collecting data", async ({ page }) => {
   await page.goto("/privacy");
   await expect(page.getByRole("heading", { name: "Your data goes almost nowhere, by design." })).toBeVisible();
-  await expect(page.getByText("no accounts, no database, no analytics, and no cookies")).toBeVisible();
+  await expect(page.getByText("no registered accounts, no database, no analytics, and no advertising or tracking cookies")).toBeVisible();
+  await expect(page.getByText("coderunway-demo-session")).toBeVisible();
   await expect(page.getByText("hashed client IP address")).toBeVisible();
   await expect(page.getByText("never included in responses or shipped to the browser")).toBeVisible();
-  await expect(page.getByText("Last updated October 11, 2026")).toBeVisible();
+  await expect(page.getByText("Last updated October 30, 2026")).toBeVisible();
 });
 
 test("terms of service page keeps the static-check disclaimer front and center", async ({ page }) => {

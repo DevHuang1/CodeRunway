@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { StaticPage } from "@/components/pages/legal/static-page";
 
 export const metadata: Metadata = {
@@ -31,6 +32,18 @@ export default function AboutPage() {
         </p>
       </section>
 
+      <section aria-labelledby="about-signin">
+        <h2 id="about-signin">The optional demo sign-in</h2>
+        <p>
+          The sample workspace is open to everyone. An optional sign-in adds a small role badge for
+          this browser session: a <strong>User</strong> role follows the standard workflow, while
+          an <strong>Admin</strong> role also opens a read-only console with safe provider status
+          and current limits. Access codes are checked on the server, and a successful sign-in sets
+          one <code>HttpOnly</code> session cookie. There is no account database, profile, or
+          persistent project storage behind it.
+        </p>
+      </section>
+
       <section aria-labelledby="about-limits">
         <h2 id="about-limits">What it deliberately does not do</h2>
         <p>
@@ -38,7 +51,18 @@ export default function AboutPage() {
           text and markup against fixed criteria. It does not compile TypeScript, run tests, or
           execute generated code in any sandbox, and it is labeled that way in the interface.
           The app does not accept arbitrary repositories, connect to GitHub, create accounts, or
-          provision cloud jobs. These are boundaries of the design, not unfinished work.
+          provision cloud jobs. The demo access codes are not accounts. These are boundaries of
+          the design, not unfinished work.
+        </p>
+      </section>
+
+      <section aria-labelledby="about-who">
+        <h2 id="about-who">Who we are</h2>
+        <p>
+          CodeRunway is an open-source project maintained by its contributors. The full source
+          history, issues, and project documents are public on GitHub. Questions and corrections
+          can be sent through the <Link href="/contact">contact page</Link>; security reports should use
+          the repository&rsquo;s private advisory form.
         </p>
       </section>
 

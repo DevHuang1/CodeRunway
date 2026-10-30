@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AppProviders } from "@/components/app-providers";
+import { getSession } from "@/lib/auth-server";
 
 export const metadata: Metadata = {
   title: "CodeRunway — From a coding issue to evidence",
@@ -18,11 +19,13 @@ const themeBootstrap = `(() => {
   } catch {}
 })();`;
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const session = await getSession();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
-      <body><AppProviders>{children}</AppProviders></body>
+      <body><AppProviders initialSession={session}>{children}</AppProviders></body>
     </html>
   );
 }

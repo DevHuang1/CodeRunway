@@ -1,4 +1,6 @@
 import type { RunState } from "./types";
+import Link from "next/link";
+import { AccountMenu } from "@/components/auth/account-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 function statusLabel(state: RunState) {
@@ -21,15 +23,16 @@ function statusTone(state: RunState) {
 export function WorkspaceHeader({ runState }: { runState: RunState }) {
   return (
     <header className="topbar shell-width">
-      <div className="brand-lockup">
+      <Link className="brand-lockup workspace-brand" href="/" aria-label="CodeRunway home">
         <div className="brand-mark" aria-hidden="true"><span>↗</span></div>
         <div>
           <p className="brand-name">CodeRunway</p>
           <p className="brand-subtitle">A kinder way to make one useful change</p>
         </div>
-      </div>
+      </Link>
       <div className="topbar-meta">
         <ThemeToggle />
+        <AccountMenu />
         <span className={`status-pill ${statusTone(runState)}`}><i /> {statusLabel(runState)}</span>
       </div>
     </header>

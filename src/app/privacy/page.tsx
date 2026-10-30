@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { StaticPage } from "@/components/pages/legal/static-page";
 
 export const metadata: Metadata = {
@@ -8,13 +9,14 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <StaticPage eyebrow="PRIVACY" title="Your data goes almost nowhere, by design." updated="October 11, 2026">
+    <StaticPage eyebrow="PRIVACY" title="Your data goes almost nowhere, by design." updated="October 30, 2026">
       <section aria-labelledby="privacy-summary">
         <h2 id="privacy-summary">The short version</h2>
         <p>
-          CodeRunway has no accounts, no database, no analytics, and no cookies. Your workflow
-          state lives in this browser tab&rsquo;s memory and is discarded on refresh. Nothing you do
-          here is persisted anywhere by this application.
+          CodeRunway has no registered accounts, no database, no analytics, and no advertising or
+          tracking cookies. The sample workspace is open. If you choose the optional demo sign-in,
+          one essential session cookie remembers the role you selected for this browser session.
+          Your workflow state still lives in page memory and is discarded on refresh.
         </p>
       </section>
 
@@ -23,8 +25,21 @@ export default function PrivacyPage() {
         <p>
           One setting — your light or dark theme preference — is saved to your browser&rsquo;s
           <code>localStorage</code> so it survives a reload. It never leaves your device. You can
-          clear it at any time through your browser&rsquo;s site settings. Your plan, run, and verify
-          state is held in page memory only and resets when the tab refreshes or closes.
+          clear it at any time through your browser&rsquo;s site settings. Your plan, run, and
+          verify state is held in page memory only and resets when the tab refreshes or closes.
+          Signing out removes the demo session cookie.
+        </p>
+      </section>
+
+      <section aria-labelledby="privacy-signin">
+        <h2 id="privacy-signin">The demo sign-in cookie</h2>
+        <p>
+          If you sign in, the server sets one cookie named <code>coderunway-demo-session</code>.
+          It is <code>HttpOnly</code>, <code>SameSite=Lax</code>, limited to this site, and expires
+          after eight hours. The cookie stores a signed role value only: <code>user</code> or{" "}
+          <code>admin</code>. It does not contain an email address, a name, a password, or a
+          profile. Logging out deletes it immediately. There is no account database and no
+          persistent history of who signed in.
         </p>
       </section>
 
@@ -53,9 +68,9 @@ export default function PrivacyPage() {
       <section aria-labelledby="privacy-never">
         <h2 id="privacy-never">What CodeRunway never does</h2>
         <ul>
-          <li>No accounts, sign-in, email collection, or user profiles.</li>
+          <li>No registered accounts, email collection, personal profiles, or marketing lists.</li>
           <li>No analytics, tracking pixels, or advertising networks.</li>
-          <li>No persistent storage of sessions, plans, patches, or summaries.</li>
+          <li>No persistent storage of sessions, plans, patches, or summaries in a database.</li>
           <li>No sale or sharing of any data with third parties.</li>
           <li>No reading of your local files, repository, or clipboard contents.</li>
         </ul>
@@ -65,7 +80,8 @@ export default function PrivacyPage() {
         <h2 id="privacy-changes">Changes and contact</h2>
         <p>
           If this policy changes, the date above will be updated and the change described in the
-          repository history. Questions can be raised as issues on the{" "}
+          repository history. Questions can be raised through the{" "}
+          <Link href="/contact">contact page</Link> or as issues on the{" "}
           <a href="https://github.com/DevHuang1/CodeRunway">public repository</a>.
         </p>
       </section>

@@ -101,7 +101,7 @@ Live plan and run requests consume one rate-limit permit each. A retry is a new 
 - **Accessibility:** semantic HTML, keyboard operation, visible focus, progress semantics, live announcements, and reduced-motion support.
 - **Performance:** fallback completes quickly; live requests time out after at most 120 seconds and can be stopped from the browser.
 - **Cost:** tests never call Nebius; CI pins `AGENT_MODE=fallback`; no automatic model retry or repair loop; the process-local limiter is not represented as a provider-side spend quota.
-- **Deployment:** use a standard Next.js runtime. No cloud job, runner image, CLI identity, or sandbox setup is required. On Vercel, `ENABLE_EXPERIMENTAL_COREPACK=1` is required for the pinned pnpm version; standalone output is disabled automatically because Vercel's adapter conflicts with Next 16.3 standalone builds.
+- **Deployment:** use a standard Next.js runtime. No cloud job, runner image, CLI identity, or sandbox setup is required. On Vercel, use the checked-in `vercel.json`, enable Corepack with `ENABLE_EXPERIMENTAL_COREPACK=1` so the pinned pnpm version is honored, and keep `NEBIUS_API_KEY` server-side. The plan/run routes use Node.js with a 150-second function budget; standalone output is disabled automatically because Vercel's adapter conflicts with Next 16.3 standalone builds. In-memory usage limits are per-instance and are not a global billing quota.
 - **Honesty:** a failed criterion is never rendered as passed, and no page claims executed tests, compilation, or runtime verification.
 
 ## 6. Traceability matrix
