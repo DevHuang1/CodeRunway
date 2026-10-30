@@ -37,8 +37,8 @@ export default function AboutPage() {
         <p>
           The sample workspace is open to everyone. An optional sign-in adds a small role badge for
           this browser session: a <strong>User</strong> role follows the standard workflow, while
-          an <strong>Admin</strong> role also opens a read-only console with safe provider status
-          and current limits. Access codes are checked on the server, and a successful sign-in sets
+          a <strong>Judge</strong> role also opens a read-only console with safe provider status
+          and current limits. Passwords are checked on the server, and a successful sign-in sets
           one <code>HttpOnly</code> session cookie. There is no account database, profile, or
           persistent project storage behind it.
         </p>
@@ -51,7 +51,7 @@ export default function AboutPage() {
           text and markup against fixed criteria. It does not compile TypeScript, run tests, or
           execute generated code in any sandbox, and it is labeled that way in the interface.
           The app does not accept arbitrary repositories, connect to GitHub, create accounts, or
-          provision cloud jobs. The demo access codes are not accounts. These are boundaries of
+          provision cloud jobs. The demo passwords are not accounts. These are boundaries of
           the design, not unfinished work.
         </p>
       </section>

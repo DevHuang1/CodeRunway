@@ -37,8 +37,8 @@ export default function PrivacyPage() {
           If you sign in, the server sets one cookie named <code>coderunway-demo-session</code>.
           It is <code>HttpOnly</code>, <code>SameSite=Lax</code>, limited to this site, and expires
           after eight hours. The cookie stores a signed role value only: <code>user</code> or{" "}
-          <code>admin</code>. It does not contain an email address, a name, a password, or a
-          profile. Logging out deletes it immediately. There is no account database and no
+          <code>admin</code>, the internal value for the Judge role. It does not contain an email
+          address, a name, a password, or a profile. Logging out deletes it immediately. There is no account database and no
           persistent history of who signed in.
         </p>
       </section>

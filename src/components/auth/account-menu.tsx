@@ -69,7 +69,7 @@ export function AccountMenu() {
           </Link>
           {isAdmin ? (
             <Link role="menuitem" href="/admin" onClick={() => setOpen(false)}>
-              Admin console
+              Judge console
             </Link>
           ) : null}
           <Link role="menuitem" href="/login" onClick={() => setOpen(false)}>

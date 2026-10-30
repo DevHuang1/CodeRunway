@@ -24,14 +24,14 @@ export async function POST(request: Request) {
       );
     }
     return Response.json(
-      { error: "Choose a role and enter the matching access code." },
+      { error: "Choose a role and enter the matching password." },
       { status: 400, headers: { "Cache-Control": "no-store" } },
     );
   }
 
   if (!verifyCredentials(body.role, body.password)) {
     return Response.json(
-      { error: `That access code is not correct for the ${AUTH_ROLE_LABELS[body.role]} role.` },
+      { error: `That password is not correct for the ${AUTH_ROLE_LABELS[body.role]} role.` },
       { status: 401, headers: { "Cache-Control": "no-store" } },
     );
   }

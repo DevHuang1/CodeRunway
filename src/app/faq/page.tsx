@@ -14,24 +14,25 @@ export default function FaqPage() {
         <h2 id="faq-account">Do I need an account to use the workspace?</h2>
         <p>
           No. The sample workspace is open, and the workflow does not require a sign-in. The
-          optional demo sign-in adds a role badge and, for the admin role, a read-only operations
+          optional demo sign-in adds a role badge and, for the Judge role, a read-only operations
           view. It is not a registered user account and creates no profile.
         </p>
       </section>
 
       <section aria-labelledby="faq-codes">
-        <h2 id="faq-codes">What are the demo access codes?</h2>
+        <h2 id="faq-codes">What are the demo passwords?</h2>
         <p>
-          The user access code is <code>TESTUSER</code> and is shown in the sign-in form for
-          convenience. The admin code is configured on the server and is intentionally not shown
-          in the application. Deployments can replace the admin code with an environment variable.
+          The User demo password is <code>TESTUSER</code>. The default Judge demo password is <code>STUDYADMIN</code>.
+          Both appear in the sign-in form when the default Judge password is active. Deployments can
+          set a custom Judge password with the server-side <code>ADMIN_PASSWORD</code> variable;
+          custom passwords are not shown in the application.
         </p>
       </section>
 
       <section aria-labelledby="faq-admin">
-        <h2 id="faq-admin">What does the admin role change?</h2>
+        <h2 id="faq-admin">What does the Judge role change?</h2>
         <p>
-          It opens the <Link href="/admin">admin console</Link>, which shows whether the live model
+          It opens the <Link href="/admin">Judge console</Link>, which shows whether the live model
           path is configured, the current safe limits, and links back into the workspace. It does
           not expose the provider key, change settings, or unlock arbitrary repositories.
         </p>

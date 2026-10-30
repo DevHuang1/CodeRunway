@@ -27,17 +27,19 @@ With `AGENT_MODE=auto`, the app uses Token Factory when `NEBIUS_API_KEY` is pres
 ## Demo sign-in
 
 The workspace is open without signing in. The optional demo sign-in at `/login` is a role switch:
-choose **User** or **Admin** from the dropdown, then enter the access code. The user demo code is
-`TESTUSER` and is shown at the bottom of the password field. The admin demo code is `STUDYADMIN`;
-the admin console at `/admin` is read-only and shows safe provider status and limits.
+choose **User** or **Judge** from the dropdown, then enter the password shown below the field
+for that role. On deployments with a custom Judge password, ask the site administrator for it.
+The User demo password is `TESTUSER`; the default Judge demo password is `STUDYADMIN`. The Judge
+console at `/admin` is read-only and shows safe provider status and limits.
 
-The codes are checked server-side. A successful sign-in sets one signed, `HttpOnly`,
+The passwords are checked server-side. A successful sign-in sets one signed, `HttpOnly`,
 `SameSite=Lax` session cookie for up to eight hours; logging out deletes it. There is no account
-database or personal profile. The user code is the public demo code `TESTUSER`; the admin code is
-`STUDYADMIN` by default. These default codes are public demo credentials, not secrets. For any
-public deployment, set `AUTH_SECRET` and `ADMIN_PASSWORD` to your own server-side values. The app
-also honors an empty `.env.local` entry by falling back to the demo defaults, so remove or fill
-the variables deliberately.
+database or personal profile. The User password is the public demo password `TESTUSER`; the Judge
+password is `STUDYADMIN` by default. These default passwords are public demo credentials, not
+secrets. The sign-in form shows the User password and the default Judge password; a custom
+`ADMIN_PASSWORD` is kept private. For any public deployment, set `AUTH_SECRET` and
+`ADMIN_PASSWORD` to your own server-side values. The app also honors an empty `.env.local` entry
+by falling back to the demo defaults, so remove or fill the variables deliberately.
 
 ## Cost and key-protection limits
 
@@ -123,7 +125,7 @@ settings and provider key are not created or changed by this repository.
 
 ## Public pages
 
-Besides the workflow, the app serves an About page at `/about`, a FAQ at `/faq`, a contact page at `/contact`, a privacy policy at `/privacy`, plain-language terms of service at `/terms`, and an accessibility statement at `/accessibility`, all linked from every footer. The demo sign-in lives at `/login`, and the read-only admin console at `/admin`. The [MIT license](LICENSE) sits at the repository root.
+Besides the workflow, the app serves an About page at `/about`, a FAQ at `/faq`, a contact page at `/contact`, a privacy policy at `/privacy`, plain-language terms of service at `/terms`, and an accessibility statement at `/accessibility`, all linked from every footer. The demo sign-in lives at `/login`, and the read-only Judge console at `/admin`. The [MIT license](LICENSE) sits at the repository root.
 
 ## Devpost readiness
 

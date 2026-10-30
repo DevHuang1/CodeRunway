@@ -3,10 +3,11 @@ import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 import { StaticPage } from "@/components/pages/legal/static-page";
 import { safeNextPath } from "@/lib/auth";
+import { getPublicJudgeDemoPassword } from "@/lib/auth-server";
 
 export const metadata: Metadata = {
   title: "Sign in — CodeRunway",
-  description: "Sign in to the CodeRunway sample workspace as a demo user or administrator.",
+  description: "Sign in to the CodeRunway sample workspace as a demo User or Judge.",
 };
 
 export default async function LoginPage({
@@ -34,7 +35,7 @@ export default async function LoginPage({
               not create a personal account or collect an email address.
             </p>
           </div>
-          <LoginForm nextPath={nextPath} />
+          <LoginForm nextPath={nextPath} judgeDemoPassword={getPublicJudgeDemoPassword()} />
         </div>
 
         <aside className="login-aside" aria-label="Demo access notes">
@@ -45,13 +46,13 @@ export default async function LoginPage({
               evidence path.
             </li>
             <li>
-              <strong>Admin</strong> also opens a read-only operations view with safe provider
+              <strong>Judge</strong> also opens a read-only operations view with safe provider
               status and current limits.
             </li>
           </ul>
           <p className="login-aside-note">
-            Access codes are checked on the server. Only the user demo code is shown in the form;
-            the admin code stays with the site administrator.
+            The User password is shown below the field. The default Judge password appears there
+            when this deployment uses it; custom Judge passwords stay private.
           </p>
           <p>
             Read the <Link href="/privacy">privacy policy</Link> for what the session cookie does,

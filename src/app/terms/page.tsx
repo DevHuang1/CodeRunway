@@ -44,17 +44,17 @@ export default function TermsPage() {
           <li>Do not attempt to probe, overload, or exceed the rate limits of the live model path.</li>
           <li>Do not submit secrets, credentials, or personal data through the workflow. The sample task is fixed, so none are needed.</li>
           <li>Do not present CodeRunway&rsquo;s static fixture criteria as executed tests, sandbox evidence, or proof of correctness.</li>
-          <li>Do not share the admin access code or use the demo sign-in to imply that this sample provides production security.</li>
+          <li>Do not share a custom Judge password or use the demo sign-in to imply that this sample provides production security.</li>
         </ul>
       </section>
 
       <section aria-labelledby="terms-signin">
         <h2 id="terms-signin">Demo sign-in</h2>
         <p>
-          The optional sign-in is a demonstration role switch, not an account system. Access codes
+          The optional sign-in is a demonstration role switch, not an account system. Passwords
           are checked on the server, and a successful sign-in sets one session cookie for up to
-          eight hours. Default demo codes are public and must not be treated as secrets. If you
-          deploy the project publicly, set your own server-side admin password and session secret,
+          eight hours. Default demo passwords are public and must not be treated as secrets. If you
+          deploy the project publicly, set your own server-side Judge password and session secret,
           and use the sign-in only for the sample workspace.
         </p>
       </section>

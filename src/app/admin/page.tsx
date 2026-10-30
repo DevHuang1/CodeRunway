@@ -6,7 +6,7 @@ import { getSession } from "@/lib/auth-server";
 import { getSafeProviderStatus } from "@/lib/provider";
 
 export const metadata: Metadata = {
-  title: "Admin console — CodeRunway",
+  title: "Judge console — CodeRunway",
   description: "A read-only operations view for the CodeRunway sample workspace.",
 };
 
@@ -20,11 +20,11 @@ export default async function AdminPage() {
   const provider = getSafeProviderStatus();
 
   return (
-    <StaticPage eyebrow="ADMIN CONSOLE" title="A quiet operations view." wide>
+    <StaticPage eyebrow="JUDGE CONSOLE" title="A quiet operations view." wide>
       <section aria-labelledby="admin-access">
         <h2 id="admin-access">Access</h2>
         <p>
-          You are signed in with the demo admin role. This view is read-only: it shows safe
+          You are signed in with the demo Judge role. This view is read-only: it shows safe
           provider status and the limits that already apply to the sample workspace. It never
           exposes the model API key or changes server settings.
         </p>
@@ -80,7 +80,7 @@ export default async function AdminPage() {
         <ul>
           <li>The sample task and its two editable files are fixed.</li>
           <li>Evaluation is static fixture checking, not code execution, compilation, or test running.</li>
-          <li>The admin role does not create a database record, a personal profile, or persistent project storage.</li>
+          <li>The Judge role does not create a database record, a personal profile, or persistent project storage.</li>
           <li>Logging out clears the session cookie for this browser.</li>
         </ul>
       </section>

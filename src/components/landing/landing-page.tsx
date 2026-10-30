@@ -103,21 +103,21 @@ export function LandingPage() {
             <span className="eyebrow">SIGN IN OR STAY A GUEST</span>
             <div>
               <h2 id="access-title">A role for the way you want to look around.</h2>
-              <p>The sample workspace is open to everyone. Signing in adds a small role badge and, for admins, a read-only operations view.</p>
+              <p>The sample workspace is open to everyone. Signing in adds a small role badge and gives Judges a read-only operations view.</p>
             </div>
           </div>
           <div className="landing-access-grid">
             <article className="landing-access-card">
               <span className="landing-access-role">USER</span>
               <h3>Walk the full sample flow.</h3>
-              <p>Choose User and use the demo code shown below the access field. The workflow, review, and static fixture checks stay the same.</p>
+              <p>Choose User and use the demo password shown on the sign-in form. The workflow, review, and static fixture checks stay the same.</p>
               <Link className="landing-button landing-button-secondary" href="/login">Sign in as user <span aria-hidden="true">→</span></Link>
             </article>
             <article className="landing-access-card landing-access-card-admin">
-              <span className="landing-access-role">ADMIN</span>
+              <span className="landing-access-role">JUDGE</span>
               <h3>Open the operations view.</h3>
-              <p>Admins also see safe provider status and current limits. The admin access code is kept on the server.</p>
-              <Link className="landing-button landing-button-secondary" href="/login">Admin sign-in <span aria-hidden="true">→</span></Link>
+              <p>Judges also see safe provider status and current limits. The default demo password appears on the sign-in form when this deployment uses it.</p>
+              <Link className="landing-button landing-button-secondary" href="/login">Judge sign-in <span aria-hidden="true">→</span></Link>
             </article>
           </div>
         </section>
@@ -165,11 +165,11 @@ export function LandingPage() {
           <div className="landing-faq-list">
             <details>
               <summary>Do I need an account?<span aria-hidden="true">+</span></summary>
-              <p>No. The sample workspace is open. The optional sign-in uses one shared access code per role and creates no personal profile.</p>
+              <p>No. The sample workspace is open. The optional sign-in uses one shared password per role and creates no personal profile.</p>
             </details>
             <details>
-              <summary>What does the admin role unlock?<span aria-hidden="true">+</span></summary>
-              <p>A read-only admin console with safe provider status, limits, and quick links. It does not expose secrets or change model settings.</p>
+              <summary>What does the Judge role unlock?<span aria-hidden="true">+</span></summary>
+              <p>A read-only Judge console with safe provider status, limits, and quick links. It does not expose secrets or change model settings.</p>
             </details>
             <details>
               <summary>Does CodeRunway run my code?<span aria-hidden="true">+</span></summary>

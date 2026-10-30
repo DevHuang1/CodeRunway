@@ -11,12 +11,11 @@ export const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 
 export const AUTH_ROLE_LABELS: Record<AuthRole, string> = {
   user: "User",
-  admin: "Admin",
+  admin: "Judge",
 };
 
 /**
- * The user access code is intentionally visible in the UI as a demo hint.
- * The admin code is never shipped to the browser; see auth-server.ts.
+ * User demo password intentionally visible in the sign-in UI.
  */
 export const DEMO_USER_ACCESS_CODE = "TESTUSER";
 

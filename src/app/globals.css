@@ -46,7 +46,7 @@ button { font: inherit; }
 
 .shell-width { width: min(1260px, calc(100% - 64px)); margin-inline: auto; }
 
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 26px 0 20px; }
+.topbar { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 26px 0 20px; }
 .brand-lockup, .topbar-meta, .provider-card-top, .connection-card-top, .section-label-row, .panel-heading, .issue-card-top { display: flex; align-items: center; }
 .brand-lockup { gap: 11px; }
 .brand-mark { display: grid; place-items: center; width: 35px; height: 35px; border: 1px solid #c7d7d0; border-radius: 11px; color: var(--teal); background: linear-gradient(145deg, #eef6ef, #f7e8df); font-size: 19px; }
@@ -356,7 +356,7 @@ button { font: inherit; }
   linear-gradient(180deg, #faf9f5 0%, var(--paper) 57%, #f1efe8 100%); }
 .landing-shell::before { position: absolute; top: 62px; right: -15vw; width: 55vw; height: 55vw; border: 1px solid rgba(93, 153, 149, .09); border-radius: 50%; content: ""; pointer-events: none; }
 .landing-shell::after { position: absolute; top: 140px; right: -9vw; width: 42vw; height: 42vw; border: 1px solid rgba(200, 121, 110, .08); border-radius: 50%; content: ""; pointer-events: none; }
-.landing-header { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 26px; padding-bottom: 20px; border-bottom: 1px solid rgba(215, 208, 196, .72); }
+.landing-header { position: relative; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 26px; padding-bottom: 20px; border-bottom: 1px solid rgba(215, 208, 196, .72); }
 .landing-header-actions { display: flex; align-items: center; gap: 17px; }
 .landing-brand { color: inherit; text-decoration: none; }
 .landing-brand > span:last-child { display: block; }

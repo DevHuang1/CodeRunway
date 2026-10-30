@@ -32,8 +32,9 @@ export default function AccessibilityPage() {
       <section aria-labelledby="access-forms">
         <h2 id="access-forms">Forms and feedback</h2>
         <p>
-          The sign-in form has a labeled role selector and access-code field. The user demo code
-          is exposed with a &ldquo;Fill&rdquo; button rather than hidden in helper text. Errors are
+          The sign-in form has a labeled role selector and password field. Built-in demo passwords
+          appear as text with a button to fill the field. Custom Judge passwords are not shown.
+          Errors are
           announced with an alert region, and status changes in the workflow use a polite live
           region.
         </p>

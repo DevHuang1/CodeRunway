@@ -3,13 +3,13 @@ import { cookies } from "next/headers";
 import {
   AUTH_SESSION_COOKIE,
   AUTH_SESSION_MAX_AGE_SECONDS,
+  DEMO_USER_ACCESS_CODE,
   isAuthRole,
   type AuthRole,
   type AuthSession,
 } from "@/lib/auth";
 
-const DEFAULT_USER_PASSWORD = "TESTUSER";
-const DEFAULT_ADMIN_PASSWORD = "STUDYADMIN";
+const DEFAULT_JUDGE_PASSWORD = "STUDYADMIN";
 
 // Demo deployments work out of the box. Set AUTH_SECRET and custom passwords
 // before treating this sign-in as anything more than a sample role switch.
@@ -21,9 +21,17 @@ interface SessionPayload extends AuthSession {
 
 function expectedPassword(role: AuthRole): string {
   if (role === "admin") {
-    return process.env.ADMIN_PASSWORD?.trim() || DEFAULT_ADMIN_PASSWORD;
+    return process.env.ADMIN_PASSWORD?.trim() || DEFAULT_JUDGE_PASSWORD;
   }
-  return DEFAULT_USER_PASSWORD;
+  return DEMO_USER_ACCESS_CODE;
+}
+
+/** Only expose the built-in demo password, never a deployment-specific override. */
+export function getPublicJudgeDemoPassword(): string | null {
+  const configuredPassword = process.env.ADMIN_PASSWORD?.trim();
+  return !configuredPassword || configuredPassword === DEFAULT_JUDGE_PASSWORD
+    ? DEFAULT_JUDGE_PASSWORD
+    : null;
 }
 
 function passwordsMatch(expected: string, provided: string): boolean {
